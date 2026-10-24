@@ -1,0 +1,21 @@
+# Secrets
+.env
+
+# Virtual environment
+.venv/
+
+# Gitignored data / cache (see CLAUDE.md)
+data/raw/
+results/cache/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store

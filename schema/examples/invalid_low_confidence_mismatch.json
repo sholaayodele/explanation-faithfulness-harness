@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0107",
+  "recipe": {
+    "id": "food_800007",
+    "name": "spicy shrimp tacos",
+    "cuisine": "mexican",
+    "minutes": 35,
+    "main_ingredient": "shrimp",
+    "ingredients": ["shrimp", "corn tortillas", "cabbage", "lime", "chili powder"],
+    "key_ingredients": ["shrimp", "corn tortillas"],
+    "diet_tags": [],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "mexican", "weight": 0.4},
+    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "shrimp", "weight": 0.3}
+  ],
+  "confidence": "high",
+  "fallback": null,
+  "excluded_by": [],
+  "case_type": "low_confidence"
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "payload_v0_1.json",
+  "title": "Explanation payload v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "case_id",
+    "recipe",
+    "reasons",
+    "confidence",
+    "fallback",
+    "excluded_by",
+    "case_type"
+  ],
+  "properties": {
+    "schema_version": { "const": "0.1" },
+    "case_id": { "type": "string", "pattern": "^c_[0-9]+$" },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "cuisine",
+        "minutes",
+        "main_ingredient",
+        "ingredients",
+        "key_ingredients",
+        "diet_tags",
+        "other_tags"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "cuisine": {
+          "anyOf": [
+            {
+              "enum": [
+                "italian", "mexican", "indian", "chinese", "thai",
+                "greek", "french", "middle-eastern", "cajun", "caribbean"
+              ]
+            },
+            { "type": "null" }
+          ]
+        },
+        "minutes": {
+          "anyOf": [
+            { "type": "integer", "minimum": 1 },
+            { "type": "null" }
+          ]
+        },
+        "main_ingredient": {
+          "anyOf": [
+            { "enum": ["chicken", "beef", "pork", "shrimp", "salmon", "mushroom"] },
+            { "type": "null" }
+          ]
+        },
+        "ingredients": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "key_ingredients": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "diet_tags": {
+          "type": "array",
+          "items": { "enum": ["vegetarian", "vegan", "gluten-free"] }
+        },
+        "other_tags": {
+          "type": "array",
+          "items": {
+            "enum": ["low-calorie", "low-carb", "low-sodium", "low-cholesterol", "healthy"]
+          }
+        }
+      }
+    },
+    "reasons": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "field", "value", "weight"],
+        "properties": {
+          "code": {
+            "enum": [
+              "CUISINE_MATCH", "TIME_FIT", "DIET_COMPLIANT", "LIKED_INGREDIENT",
+              "SIMILAR_TO_RATED", "NEW_TO_YOU", "POPULAR_FALLBACK"
+            ]
+          },
+          "field": { "type": "string" },
+          "value": { "type": ["string", "number"] },
+          "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+          "recipe_minutes": { "type": "integer" }
+        }
+      }
+    },
+    "confidence": { "enum": ["high", "medium", "low"] },
+    "fallback": {
+      "anyOf": [
+        { "const": "POPULAR_FALLBACK" },
+        { "type": "null" }
+      ]
+    },
+    "excluded_by": {
+      "type": "array",
+      "items": {
+        "enum": ["no_pork", "no_beef", "no_shellfish", "no_peanut", "no_mushroom", "no_cilantro"]
+      }
+    },
+    "case_type": {
+      "enum": [
+        "standard", "sparse_profile", "fallback",
+        "low_confidence", "conflicting_signals", "missing_fields"
+      ]
+    }
+  }
+}

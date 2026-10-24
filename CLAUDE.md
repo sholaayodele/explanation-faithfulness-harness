@@ -24,12 +24,22 @@ Given a structured explanation payload, the model writes a short customer-facing
 
 **Out of scope:** recommendation quality, persuasiveness/delight, general writing quality beyond length. No UI. No real customer data. No fine-tuning.
 
-## Payload schema (v0.1 — draft, Shola approves changes)
+## Payload schema (v0.1 — locked, see Data decisions)
 ```json
 {
+  "schema_version": "0.1",
   "case_id": "c_0001",
-  "recipe": {"id": "food_12345", "name": "...", "cuisine": "thai", "minutes": 25,
-             "key_ingredients": ["..."], "diet_tags": ["vegetarian"]},
+  "recipe": {
+    "id": "food_12345",
+    "name": "...",
+    "cuisine": "thai",
+    "minutes": 25,
+    "main_ingredient": "chicken",
+    "ingredients": ["chicken breast", "thai basil", "fish sauce", "..."],
+    "key_ingredients": ["chicken", "thai basil"],
+    "diet_tags": [],
+    "other_tags": ["low-calorie"]
+  },
   "reasons": [
     {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "thai", "weight": 0.5},
     {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 30, "recipe_minutes": 25, "weight": 0.3}
@@ -41,9 +51,23 @@ Given a structured explanation payload, the model writes a short customer-facing
 }
 ```
 **Reason codes:** `CUISINE_MATCH`, `TIME_FIT`, `DIET_COMPLIANT`, `LIKED_INGREDIENT`, `SIMILAR_TO_RATED`, `NEW_TO_YOU`, `POPULAR_FALLBACK`.
+- `recipe.cuisine`: one of the 10 cuisines in Data decisions, or `null` (no match / 2+ cuisines / asian-only).
+- `recipe.main_ingredient`: one of `chicken | beef | pork | shrimp | salmon | mushroom`, or `null`.
+- `recipe.ingredients`: full ingredient list (used for exclusion checks); `recipe.key_ingredients`: short list shown to the generator.
+- `recipe.diet_tags`: subset of `vegetarian | vegan | gluten-free`.
+- `recipe.other_tags`: health tags only — `low-calorie | low-carb | low-sodium | low-cholesterol | healthy` — never used as reasons, kept for the generator.
+- `excluded_by`: subset of `no_pork | no_beef | no_shellfish | no_peanut | no_mushroom | no_cilantro`.
 - `confidence`: `high | medium | low`
 - `fallback`: `null | "POPULAR_FALLBACK"` (no personal signal)
 - `case_type`: `standard | sparse_profile | fallback | low_confidence | conflicting_signals | missing_fields`
+
+**Validation rules** (structural contract in `schema/payload_v0_1.json`, enforced by `schema/validator.py`):
+- Reason weights are strictly decreasing — no ties, so there is exactly one primary reason.
+- `CUISINE_MATCH.value == recipe.cuisine` (non-null); `TIME_FIT.recipe_minutes == recipe.minutes` and `≤ TIME_FIT.value`; `DIET_COMPLIANT.value in recipe.diet_tags`; `LIKED_INGREDIENT.value == recipe.main_ingredient`. No reason may reference a field that is missing/null.
+- No ingredient named in `excluded_by` (any form, word-boundary) appears in `recipe.ingredients`.
+- `fallback == "POPULAR_FALLBACK"` ⇔ `case_type == "fallback"`; a fallback payload's `reasons` contains only the `POPULAR_FALLBACK` reason; `POPULAR_FALLBACK` never appears without `fallback` set.
+- `case_type == "low_confidence"` ⇒ `confidence == "low"`.
+- Only `recipe.minutes` and `recipe.cuisine` may be absent/null when `case_type == "missing_fields"`; everywhere else `recipe.minutes` is required.
 
 ## Data
 - Source: Kaggle "Food.com Recipes and Interactions", file `RAW_recipes.csv` → `data/raw/` (gitignored).
@@ -51,6 +75,22 @@ Given a structured explanation payload, the model writes a short customer-facing
 - Profiles: ~50 synthetic, ~15 deliberately sparse or conflicting.
 - Matcher: rule-based; outputs top meals per profile with reason codes = ground truth.
 - Eval set: ~200 payloads, ~30% stress cases (non-`standard` case_type). Fixed random seed.
+
+## Data decisions
+Locked decisions for data prep and the matcher (Shola-approved; changes need sign-off, per Rules for Claude Code).
+
+- **Filter:** `main-dish` tag, `minutes` between 10 and 120.
+- **Cuisines:** `italian`, `mexican`, `indian`, `chinese`, `thai`, `greek`, `french`, `middle-eastern`, `cajun`, `caribbean`.
+  - A specific cuisine tag wins over the generic `asian` tag; `asian`-only (no specific cuisine tag) gets no cuisine match.
+  - A recipe tagged with 2+ of the specific cuisines above gets no cuisine match (ambiguous).
+- **Diet:** `vegetarian`, `vegan`, `gluten-free`. Drop any `vegetarian`/`vegan`-tagged recipe whose ingredients contain meat or fish (tag/ingredient contradiction).
+- **Ingredient matching:** word-boundary matching (not bare substring) on ingredient strings.
+  - **Likes** (`LIKED_INGREDIENT`): `chicken`, `beef`, `pork`, `shrimp`, `salmon`, `mushroom` — only when it is the main ingredient (excludes `broth`/`stock` forms).
+  - **Exclusions** (`excluded_by`): `pork` (incl. `bacon`, `ham`), `beef`, `shellfish`, `peanut`, `mushroom`, `cilantro` — match any form of the ingredient.
+- **TIME_FIT:** compares `recipe.minutes` to the profile's `max_cook_minutes`, which is one of `20 | 30 | 45 | 60`.
+- **POPULAR_FALLBACK pool:** recipes with ≥20 ratings and average rating ≥4.0, computed from `RAW_interactions.csv`.
+- **SIMILAR_TO_RATED:** same cuisine **and** same main protein as a recipe the profile rated highly.
+- **Health tags** (`low-calorie`, `low-carb`, `low-sodium`, `low-cholesterol`, `healthy`): never used as reasons (no health/weight inferences), but kept in the recipe data passed to the generator.
 
 ## Metrics
 - Faithfulness rate (all claims supported)
@@ -105,7 +145,7 @@ notebooks/         # exploration only
 
 ## Build order / status
 - [x] 1. Environment setup + `check_setup.py` passes
-- [ ] 2. Schema + validator
+- [x] 2. Schema + validator
 - [ ] 3. Data prep on RAW_recipes.csv
 - [ ] 4. Synthetic profiles
 - [ ] 5. Matcher + 200-case eval set

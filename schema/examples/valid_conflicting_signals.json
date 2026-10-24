@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0007",
+  "recipe": {
+    "id": "food_700001",
+    "name": "spicy sesame noodles",
+    "cuisine": "chinese",
+    "minutes": 20,
+    "main_ingredient": null,
+    "ingredients": ["noodles", "soy sauce", "scallion", "sesame oil", "chili flakes"],
+    "key_ingredients": ["noodles", "sesame oil"],
+    "diet_tags": ["vegetarian"],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "chinese", "weight": 0.5},
+    {"code": "DIET_COMPLIANT", "field": "diet_prefs", "value": "vegetarian", "weight": 0.3}
+  ],
+  "confidence": "medium",
+  "fallback": null,
+  "excluded_by": ["no_peanut"],
+  "case_type": "conflicting_signals"
+}

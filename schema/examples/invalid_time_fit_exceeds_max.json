@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0108",
+  "recipe": {
+    "id": "food_800008",
+    "name": "slow-roasted salmon",
+    "cuisine": null,
+    "minutes": 40,
+    "main_ingredient": "salmon",
+    "ingredients": ["salmon", "lemon", "dill", "olive oil"],
+    "key_ingredients": ["salmon"],
+    "diet_tags": [],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "salmon", "weight": 0.5},
+    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 30, "recipe_minutes": 40, "weight": 0.3}
+  ],
+  "confidence": "medium",
+  "fallback": null,
+  "excluded_by": [],
+  "case_type": "standard"
+}

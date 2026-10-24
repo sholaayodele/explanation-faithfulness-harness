@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0104",
+  "recipe": {
+    "id": "food_800004",
+    "name": "classic beef lasagna",
+    "cuisine": "italian",
+    "minutes": 90,
+    "main_ingredient": "beef",
+    "ingredients": ["ground beef", "lasagna noodles", "tomato sauce", "mozzarella", "ricotta"],
+    "key_ingredients": ["beef", "lasagna noodles"],
+    "diet_tags": [],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "POPULAR_FALLBACK", "field": "popularity", "value": 4.6, "weight": 1.0}
+  ],
+  "confidence": "low",
+  "fallback": null,
+  "excluded_by": [],
+  "case_type": "fallback"
+}

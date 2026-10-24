@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0001",
+  "recipe": {
+    "id": "food_137739",
+    "name": "arriba baked winter squash mexican style",
+    "cuisine": "mexican",
+    "minutes": 55,
+    "main_ingredient": null,
+    "ingredients": ["winter squash", "mexican seasoning", "mixed spice", "honey", "butter", "olive oil", "salt"],
+    "key_ingredients": ["winter squash", "mexican seasoning"],
+    "diet_tags": ["vegetarian"],
+    "other_tags": ["low-calorie"]
+  },
+  "reasons": [
+    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "mexican", "weight": 0.5},
+    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 60, "recipe_minutes": 55, "weight": 0.3},
+    {"code": "DIET_COMPLIANT", "field": "diet_prefs", "value": "vegetarian", "weight": 0.2}
+  ],
+  "confidence": "high",
+  "fallback": null,
+  "excluded_by": ["no_pork"],
+  "case_type": "standard"
+}

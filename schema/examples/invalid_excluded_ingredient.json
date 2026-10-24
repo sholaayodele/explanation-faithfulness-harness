@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0103",
+  "recipe": {
+    "id": "food_800003",
+    "name": "carbonara",
+    "cuisine": "italian",
+    "minutes": 25,
+    "main_ingredient": null,
+    "ingredients": ["spaghetti", "bacon", "egg", "parmesan", "black pepper"],
+    "key_ingredients": ["spaghetti", "bacon"],
+    "diet_tags": [],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "italian", "weight": 0.5},
+    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 30, "recipe_minutes": 25, "weight": 0.3}
+  ],
+  "confidence": "high",
+  "fallback": null,
+  "excluded_by": ["no_pork"],
+  "case_type": "standard"
+}

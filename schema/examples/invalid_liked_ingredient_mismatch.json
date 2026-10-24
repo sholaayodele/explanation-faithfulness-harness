@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0112",
+  "recipe": {
+    "id": "food_800012",
+    "name": "chicken stir fry",
+    "cuisine": "chinese",
+    "minutes": 20,
+    "main_ingredient": "chicken",
+    "ingredients": ["chicken", "soy sauce", "broccoli", "garlic"],
+    "key_ingredients": ["chicken", "broccoli"],
+    "diet_tags": [],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "chinese", "weight": 0.5},
+    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "beef", "weight": 0.3}
+  ],
+  "confidence": "medium",
+  "fallback": null,
+  "excluded_by": [],
+  "case_type": "standard"
+}

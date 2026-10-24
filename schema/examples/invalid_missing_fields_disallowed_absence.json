@@ -1,0 +1,21 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0113",
+  "recipe": {
+    "id": "food_800013",
+    "cuisine": "italian",
+    "minutes": null,
+    "main_ingredient": null,
+    "ingredients": ["pasta", "tomato sauce"],
+    "key_ingredients": ["pasta"],
+    "diet_tags": [],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "italian", "weight": 0.5}
+  ],
+  "confidence": "medium",
+  "fallback": null,
+  "excluded_by": [],
+  "case_type": "missing_fields"
+}

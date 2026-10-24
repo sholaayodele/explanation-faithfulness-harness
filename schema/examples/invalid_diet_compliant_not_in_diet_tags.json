@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0111",
+  "recipe": {
+    "id": "food_800011",
+    "name": "vegetarian greek bowl",
+    "cuisine": "greek",
+    "minutes": 20,
+    "main_ingredient": null,
+    "ingredients": ["chickpeas", "cucumber", "tomato", "feta"],
+    "key_ingredients": ["chickpeas", "feta"],
+    "diet_tags": ["vegetarian"],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "greek", "weight": 0.5},
+    {"code": "DIET_COMPLIANT", "field": "diet_prefs", "value": "vegan", "weight": 0.3}
+  ],
+  "confidence": "medium",
+  "fallback": null,
+  "excluded_by": [],
+  "case_type": "standard"
+}

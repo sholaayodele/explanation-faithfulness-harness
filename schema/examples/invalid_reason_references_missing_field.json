@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0109",
+  "recipe": {
+    "id": "food_800009",
+    "name": "weeknight stir fry",
+    "cuisine": "chinese",
+    "minutes": null,
+    "main_ingredient": "chicken",
+    "ingredients": ["chicken", "soy sauce", "broccoli", "garlic"],
+    "key_ingredients": ["chicken", "broccoli"],
+    "diet_tags": [],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "chicken", "weight": 0.5},
+    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 30, "recipe_minutes": 25, "weight": 0.3}
+  ],
+  "confidence": "medium",
+  "fallback": null,
+  "excluded_by": [],
+  "case_type": "missing_fields"
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.1",
+  "case_id": "c_0008",
+  "recipe": {
+    "id": "food_900001",
+    "name": "classic hamburger",
+    "cuisine": null,
+    "minutes": 20,
+    "main_ingredient": "beef",
+    "ingredients": ["ground beef", "hamburger buns", "lettuce", "tomato", "cheese"],
+    "key_ingredients": ["ground beef", "hamburger buns"],
+    "diet_tags": [],
+    "other_tags": []
+  },
+  "reasons": [
+    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "beef", "weight": 0.5}
+  ],
+  "confidence": "high",
+  "fallback": null,
+  "excluded_by": ["no_pork"],
+  "case_type": "standard"
+}

@@ -84,9 +84,14 @@ Locked decisions for data prep and the matcher (Shola-approved; changes need sig
   - A specific cuisine tag wins over the generic `asian` tag; `asian`-only (no specific cuisine tag) gets no cuisine match.
   - A recipe tagged with 2+ of the specific cuisines above gets no cuisine match (ambiguous).
 - **Diet:** `vegetarian`, `vegan`, `gluten-free`. Drop any `vegetarian`/`vegan`-tagged recipe whose ingredients contain meat or fish (tag/ingredient contradiction).
-- **Ingredient matching:** word-boundary matching (not bare substring) on ingredient strings.
-  - **Likes** (`LIKED_INGREDIENT`): `chicken`, `beef`, `pork`, `shrimp`, `salmon`, `mushroom` — only when it is the main ingredient (excludes `broth`/`stock` forms).
+- **Ingredient matching:** whole-word matching (not a bare prefix — e.g. `ham` must not match inside `hamburger`, `beef` must not match inside `beefsteak`) on ingredient strings.
+  - **Likes** (`LIKED_INGREDIENT`): `chicken`, `beef`, `pork`, `shrimp`, `salmon`, `mushroom` — only when it is the main ingredient (excludes `broth`/`stock`/`bouillon` forms).
   - **Exclusions** (`excluded_by`): `pork` (incl. `bacon`, `ham`), `beef`, `shellfish`, `peanut`, `mushroom`, `cilantro` — match any form of the ingredient.
+- **`main_ingredient` derivation** (`data_prep`), resolving the likes above via synonyms:
+  - Synonyms: `pork` ← `bacon`, `ham`, `prosciutto` (and pork cuts, already literal matches); `beef` ← `steak`, `sirloin`, `brisket`, `chuck`; `shrimp` ← `prawn(s)`. `chicken` and `salmon` have no added synonyms.
+  - Any other meat/fish term (`turkey`, `lamb`, `veal`, `sausage`, `tuna`, `fish`, `crab`, `lobster`, `clam`, `mussel`, `oyster`, `scallop`, `anchovy`, `gelatin`) counts as "other protein": it blocks `mushroom` and nulls `main_ingredient` if present alongside any candidate.
+  - 2+ distinct proteins (after synonym mapping) → `null` (ambiguous), as with cuisine.
+  - Broth/stock/bouillon forms are still ignored for `main_ingredient` (but **not** for the vegetarian/vegan contamination check below — a "vegetarian" recipe containing chicken broth is still dropped).
 - **TIME_FIT:** compares `recipe.minutes` to the profile's `max_cook_minutes`, which is one of `20 | 30 | 45 | 60`.
 - **POPULAR_FALLBACK pool:** recipes with ≥20 ratings and average rating ≥4.0, computed from `RAW_interactions.csv`.
 - **SIMILAR_TO_RATED:** same cuisine **and** same main protein as a recipe the profile rated highly.
@@ -146,7 +151,7 @@ notebooks/         # exploration only
 ## Build order / status
 - [x] 1. Environment setup + `check_setup.py` passes
 - [x] 2. Schema + validator
-- [ ] 3. Data prep on RAW_recipes.csv
+- [x] 3. Data prep on RAW_recipes.csv
 - [ ] 4. Synthetic profiles
 - [ ] 5. Matcher + 200-case eval set
 - [ ] 6. v1 generator (10 cases, then 200)

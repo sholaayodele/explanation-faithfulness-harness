@@ -1,11 +1,12 @@
 """Structural + business-rule validation for explanation payloads (v0.1)."""
 
 import json
-import re
 from pathlib import Path
 from typing import Any
 
 import jsonschema
+
+from ingredient_matching import mentions_term
 
 _SCHEMA_PATH = Path(__file__).parent / "payload_v0_1.json"
 
@@ -37,8 +38,7 @@ def _structural_errors(payload: dict[str, Any]) -> list[str]:
 
 
 def _ingredient_mentions(ingredients: list[str], term: str) -> bool:
-    pattern = re.compile(r"\b" + re.escape(term) + r"\w*", re.IGNORECASE)
-    return any(pattern.search(ing) for ing in ingredients)
+    return any(mentions_term(ing, term) for ing in ingredients)
 
 
 def _reason_by_code(reasons: list[dict[str, Any]], code: str) -> dict[str, Any] | None:

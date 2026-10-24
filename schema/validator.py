@@ -6,18 +6,9 @@ from typing import Any
 
 import jsonschema
 
-from ingredient_matching import mentions_term
+from ingredient_matching import EXCLUSION_FORMS, mentions_term
 
 _SCHEMA_PATH = Path(__file__).parent / "payload_v0_1.json"
-
-_EXCLUSION_FORMS: dict[str, list[str]] = {
-    "no_pork": ["pork", "bacon", "ham"],
-    "no_beef": ["beef"],
-    "no_shellfish": ["shellfish", "shrimp", "prawn", "crab", "lobster", "clam", "mussel", "oyster", "scallop"],
-    "no_peanut": ["peanut"],
-    "no_mushroom": ["mushroom"],
-    "no_cilantro": ["cilantro"],
-}
 
 
 def _load_schema() -> dict[str, Any]:
@@ -103,7 +94,7 @@ def _business_rule_errors(payload: dict[str, Any]) -> list[str]:
 
     ingredients = recipe.get("ingredients", [])
     for code in excluded_by:
-        for term in _EXCLUSION_FORMS.get(code, []):
+        for term in EXCLUSION_FORMS.get(code, []):
             if _ingredient_mentions(ingredients, term):
                 errors.append(f"excluded_by contains {code!r} but recipe.ingredients mentions {term!r}")
                 break

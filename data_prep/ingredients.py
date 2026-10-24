@@ -1,50 +1,28 @@
 """Ingredient-matching helpers: main_ingredient, key_ingredients, veg/vegan contamination."""
 
-from ingredient_matching import mentions_term
-
-BROTH_FORMS = ["broth", "stock", "bouillon"]
-
-# main_ingredient categories, each with its synonyms. Cuts like "pork chop"
-# already contain the literal word "pork", so only true synonyms are added.
-CATEGORY_TERMS = {
-    "chicken": ["chicken"],
-    "beef": ["beef", "steak", "sirloin", "brisket", "chuck"],
-    "pork": ["pork", "bacon", "ham", "prosciutto"],
-    "shrimp": ["shrimp", "prawn"],
-    "salmon": ["salmon"],
-}
-MUSHROOM_TERMS = ["mushroom"]
-
-# Any other meat/fish term: not one of the 6 likes/synonyms above, but still
-# disqualifies main_ingredient (blocks mushroom, nulls out any candidate).
-# Includes processed/ambiguous meats, since those can't be cleanly assigned
-# to one of the 6 likes either.
-OTHER_PROTEIN_TERMS = [
-    "turkey", "lamb", "veal", "sausage", "tuna", "fish",
-    "crab", "lobster", "clam", "mussel", "oyster", "scallop", "anchovy", "gelatin",
-    "frank", "hot dog", "pepperoni", "salami", "chorizo", "kielbasa", "bratwurst",
-    "meatball", "ground meat", "lunch meat", "deli meat", "spam", "venison", "duck",
-]
-
-# Broader than the above: used only to check whether a vegetarian/vegan-tagged
-# recipe actually contains meat or fish (any form, including broth - unlike
-# main_ingredient, broth/stock/bouillon still counts here).
-MEAT_FISH_CONTAMINANTS = [
-    "chicken", "beef", "pork", "bacon", "ham", "turkey", "lamb", "veal", "sausage",
-    "shrimp", "prawn", "salmon", "tuna", "fish", "crab", "lobster", "clam", "mussel",
-    "oyster", "scallop", "anchovy", "gelatin",
-]
+from ingredient_matching import (
+    CATEGORY_TERMS,
+    MEAT_FISH_CONTAMINANTS,
+    MUSHROOM_TERMS,
+    OTHER_PROTEIN_TERMS,
+    is_animal_derived_form,
+    is_condiment_form,
+    mentions_term,
+)
 
 PANTRY_STAPLES = ["salt", "pepper", "water", "oil", "olive oil", "butter", "sugar", "flour", "garlic", "onion"]
 
 
-def _is_broth_form(ingredient: str) -> bool:
-    return any(mentions_term(ingredient, form) for form in BROTH_FORMS)
-
-
 def _category_present(ingredients: list[str], terms: list[str]) -> bool:
+    """True if any ingredient mentions a term, excluding condiment and animal-derived forms.
+
+    E.g. "steak sauce" doesn't count toward beef, and "chicken broth" doesn't
+    count toward chicken - neither is the dish's main ingredient.
+    """
     return any(
-        any(mentions_term(ing, term) for term in terms) and not _is_broth_form(ing)
+        any(mentions_term(ing, term) for term in terms)
+        and not is_condiment_form(ing)
+        and not is_animal_derived_form(ing)
         for ing in ingredients
     )
 
@@ -52,11 +30,12 @@ def _category_present(ingredients: list[str], terms: list[str]) -> bool:
 def determine_main_ingredient(ingredients: list[str]) -> str | None:
     """Pick the single main ingredient among the 6 likes (with synonyms), or None.
 
-    Broth/stock/bouillon forms don't count for any term. Any "other protein"
-    term (meat/fish outside the 6 likes/synonyms) disqualifies main_ingredient
-    entirely - it blocks mushroom and nulls out any candidate. Otherwise, 2+
-    distinct likes categories matching is ambiguous (None); a meat/fish match
-    wins over mushroom; mushroom alone is returned if nothing else matched.
+    Condiment forms ("steak sauce") and animal-derived forms ("chicken broth")
+    don't count for any term. Any "other protein" term (meat/fish outside the
+    6 likes/synonyms) disqualifies main_ingredient entirely - it blocks
+    mushroom and nulls out any candidate. Otherwise, 2+ distinct likes
+    categories matching is ambiguous (None); a meat/fish match wins over
+    mushroom; mushroom alone is returned if nothing else matched.
     """
     if _category_present(ingredients, OTHER_PROTEIN_TERMS):
         return None
@@ -72,8 +51,18 @@ def determine_main_ingredient(ingredients: list[str]) -> str | None:
 
 
 def is_vegetarian_vegan_contaminated(ingredients: list[str]) -> bool:
-    """True if any ingredient mentions a meat or fish term, in any form."""
-    return any(mentions_term(ing, term) for ing in ingredients for term in MEAT_FISH_CONTAMINANTS)
+    """True if any ingredient mentions a meat or fish term, in any form.
+
+    Condiment forms ("steak sauce") are excluded (typically meat-free), but
+    animal-derived forms ("chicken broth") still count - unlike
+    main_ingredient, a vegetarian recipe containing chicken broth is still
+    a real contradiction.
+    """
+    return any(
+        mentions_term(ing, term) and not is_condiment_form(ing)
+        for ing in ingredients
+        for term in MEAT_FISH_CONTAMINANTS
+    )
 
 
 def _is_pantry_staple(ingredient: str) -> bool:

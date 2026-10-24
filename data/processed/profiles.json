@@ -1,0 +1,949 @@
+[
+  {
+    "profile_id": "p_001",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "italian"
+    ],
+    "diet": [
+      "vegetarian"
+    ],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [],
+    "exclusions": [
+      "no_cilantro"
+    ],
+    "rated_highly": [
+      109823,
+      125087
+    ]
+  },
+  {
+    "profile_id": "p_002",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "indian",
+      "italian"
+    ],
+    "diet": [
+      "vegetarian"
+    ],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "mushroom"
+    ],
+    "exclusions": [
+      "no_beef"
+    ],
+    "rated_highly": [
+      85867,
+      365959,
+      99213
+    ]
+  },
+  {
+    "profile_id": "p_003",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "italian",
+      "middle-eastern"
+    ],
+    "diet": [
+      "vegetarian"
+    ],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "mushroom"
+    ],
+    "exclusions": [
+      "no_shellfish"
+    ],
+    "rated_highly": [
+      419691,
+      31270,
+      225223
+    ]
+  },
+  {
+    "profile_id": "p_004",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese",
+      "mexican"
+    ],
+    "diet": [
+      "vegan"
+    ],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "mushroom"
+    ],
+    "exclusions": [
+      "no_cilantro"
+    ],
+    "rated_highly": [
+      199833,
+      50466,
+      48099
+    ]
+  },
+  {
+    "profile_id": "p_005",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "cajun",
+      "chinese"
+    ],
+    "diet": [
+      "vegan"
+    ],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [],
+    "exclusions": [
+      "no_pork"
+    ],
+    "rated_highly": [
+      51312,
+      176577,
+      371657
+    ]
+  },
+  {
+    "profile_id": "p_006",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "middle-eastern"
+    ],
+    "diet": [
+      "gluten-free"
+    ],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "beef",
+      "pork"
+    ],
+    "exclusions": [
+      "no_cilantro"
+    ],
+    "rated_highly": [
+      71023,
+      282620,
+      363669
+    ]
+  },
+  {
+    "profile_id": "p_007",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "caribbean",
+      "mexican"
+    ],
+    "diet": [
+      "gluten-free"
+    ],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "salmon",
+      "shrimp"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      94410,
+      339783
+    ]
+  },
+  {
+    "profile_id": "p_008",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "mexican",
+      "thai"
+    ],
+    "diet": [],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "mushroom"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      280709,
+      311563,
+      110154
+    ]
+  },
+  {
+    "profile_id": "p_009",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "indian"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "salmon"
+    ],
+    "exclusions": [
+      "no_pork"
+    ],
+    "rated_highly": [
+      208042,
+      455941
+    ]
+  },
+  {
+    "profile_id": "p_010",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese"
+    ],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "mushroom"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      91255,
+      127016
+    ]
+  },
+  {
+    "profile_id": "p_011",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "middle-eastern"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "mushroom",
+      "salmon"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      42470,
+      323868
+    ]
+  },
+  {
+    "profile_id": "p_012",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "cajun",
+      "middle-eastern"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "chicken"
+    ],
+    "exclusions": [
+      "no_mushroom"
+    ],
+    "rated_highly": [
+      163687,
+      127362
+    ]
+  },
+  {
+    "profile_id": "p_013",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "italian"
+    ],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "chicken",
+      "salmon"
+    ],
+    "exclusions": [
+      "no_cilantro"
+    ],
+    "rated_highly": [
+      55774,
+      454214,
+      153159
+    ]
+  },
+  {
+    "profile_id": "p_014",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese",
+      "mexican"
+    ],
+    "diet": [
+      "vegan"
+    ],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [
+      "mushroom"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      222904,
+      190962
+    ]
+  },
+  {
+    "profile_id": "p_015",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese",
+      "mexican"
+    ],
+    "diet": [
+      "gluten-free"
+    ],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "shrimp"
+    ],
+    "exclusions": [
+      "no_peanut"
+    ],
+    "rated_highly": [
+      24766,
+      282590
+    ]
+  },
+  {
+    "profile_id": "p_016",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "cajun"
+    ],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      369456,
+      376793,
+      484622
+    ]
+  },
+  {
+    "profile_id": "p_017",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "french"
+    ],
+    "diet": [],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "salmon",
+      "shrimp"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      59799,
+      258638,
+      180846
+    ]
+  },
+  {
+    "profile_id": "p_018",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "caribbean",
+      "italian"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "salmon"
+    ],
+    "exclusions": [
+      "no_beef"
+    ],
+    "rated_highly": [
+      186660,
+      71871
+    ]
+  },
+  {
+    "profile_id": "p_019",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese",
+      "mexican"
+    ],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "shrimp"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      374237,
+      202374,
+      131563
+    ]
+  },
+  {
+    "profile_id": "p_020",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "indian",
+      "thai"
+    ],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "shrimp"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      378666,
+      152826
+    ]
+  },
+  {
+    "profile_id": "p_021",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "greek",
+      "indian"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "beef",
+      "pork"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      333747,
+      259395,
+      41992
+    ]
+  },
+  {
+    "profile_id": "p_022",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "mexican"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "pork",
+      "salmon"
+    ],
+    "exclusions": [
+      "no_shellfish"
+    ],
+    "rated_highly": [
+      463641,
+      22513
+    ]
+  },
+  {
+    "profile_id": "p_023",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "italian",
+      "mexican"
+    ],
+    "diet": [],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [
+      "chicken"
+    ],
+    "exclusions": [
+      "no_beef"
+    ],
+    "rated_highly": [
+      437756,
+      20859,
+      369345
+    ]
+  },
+  {
+    "profile_id": "p_024",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "mexican"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "pork"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      302784,
+      33385
+    ]
+  },
+  {
+    "profile_id": "p_025",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "caribbean",
+      "indian"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      479945,
+      410351
+    ]
+  },
+  {
+    "profile_id": "p_026",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese",
+      "thai"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "mushroom",
+      "pork"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      457778,
+      100180,
+      161333
+    ]
+  },
+  {
+    "profile_id": "p_027",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "indian",
+      "thai"
+    ],
+    "diet": [
+      "gluten-free"
+    ],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "mushroom",
+      "pork"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      211687,
+      337328
+    ]
+  },
+  {
+    "profile_id": "p_028",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "french",
+      "italian"
+    ],
+    "diet": [
+      "gluten-free"
+    ],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "chicken",
+      "shrimp"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      94798,
+      178204,
+      295471
+    ]
+  },
+  {
+    "profile_id": "p_029",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "french",
+      "greek"
+    ],
+    "diet": [],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      382343,
+      469684,
+      464683
+    ]
+  },
+  {
+    "profile_id": "p_030",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese",
+      "thai"
+    ],
+    "diet": [],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [
+      "mushroom",
+      "shrimp"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      110977,
+      72299,
+      157351
+    ]
+  },
+  {
+    "profile_id": "p_031",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese"
+    ],
+    "diet": [],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [
+      "no_beef"
+    ],
+    "rated_highly": [
+      493602,
+      237945,
+      56409
+    ]
+  },
+  {
+    "profile_id": "p_032",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "french",
+      "middle-eastern"
+    ],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "shrimp"
+    ],
+    "exclusions": [
+      "no_cilantro"
+    ],
+    "rated_highly": [
+      410925,
+      372756,
+      43259
+    ]
+  },
+  {
+    "profile_id": "p_033",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "cajun",
+      "caribbean"
+    ],
+    "diet": [],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "salmon",
+      "shrimp"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      173426,
+      226126,
+      487497
+    ]
+  },
+  {
+    "profile_id": "p_034",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "thai"
+    ],
+    "diet": [],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [
+      "pork"
+    ],
+    "exclusions": [
+      "no_mushroom"
+    ],
+    "rated_highly": [
+      75349,
+      508765
+    ]
+  },
+  {
+    "profile_id": "p_035",
+    "profile_type": "standard",
+    "cuisine_prefs": [
+      "chinese",
+      "indian"
+    ],
+    "diet": [
+      "vegan"
+    ],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [
+      "mushroom"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      259532,
+      152850
+    ]
+  },
+  {
+    "profile_id": "p_036",
+    "profile_type": "sparse",
+    "cuisine_prefs": [],
+    "diet": [],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [],
+    "exclusions": [],
+    "rated_highly": []
+  },
+  {
+    "profile_id": "p_037",
+    "profile_type": "sparse",
+    "cuisine_prefs": [],
+    "diet": [],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [],
+    "exclusions": [],
+    "rated_highly": []
+  },
+  {
+    "profile_id": "p_038",
+    "profile_type": "sparse",
+    "cuisine_prefs": [],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [],
+    "exclusions": [],
+    "rated_highly": []
+  },
+  {
+    "profile_id": "p_039",
+    "profile_type": "sparse",
+    "cuisine_prefs": [],
+    "diet": [],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [],
+    "exclusions": [],
+    "rated_highly": [
+      110937,
+      54795,
+      283713
+    ]
+  },
+  {
+    "profile_id": "p_040",
+    "profile_type": "sparse",
+    "cuisine_prefs": [],
+    "diet": [],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [],
+    "exclusions": [],
+    "rated_highly": [
+      462979,
+      283168
+    ]
+  },
+  {
+    "profile_id": "p_041",
+    "profile_type": "sparse",
+    "cuisine_prefs": [],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [],
+    "exclusions": [],
+    "rated_highly": [
+      98370,
+      136628,
+      96923
+    ]
+  },
+  {
+    "profile_id": "p_042",
+    "profile_type": "sparse",
+    "cuisine_prefs": [],
+    "diet": [],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [],
+    "exclusions": [],
+    "rated_highly": [
+      244673,
+      165627
+    ]
+  },
+  {
+    "profile_id": "p_043",
+    "profile_type": "sparse",
+    "cuisine_prefs": [],
+    "diet": [],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [],
+    "exclusions": [],
+    "rated_highly": [
+      305364,
+      291604
+    ]
+  },
+  {
+    "profile_id": "p_044",
+    "profile_type": "conflicting",
+    "conflict_pattern": "diet_vs_liked_ingredient",
+    "cuisine_prefs": [
+      "indian"
+    ],
+    "diet": [
+      "vegetarian"
+    ],
+    "max_cook_minutes": 60,
+    "liked_ingredients": [
+      "salmon"
+    ],
+    "exclusions": [
+      "no_shellfish"
+    ],
+    "rated_highly": [
+      12297,
+      8931,
+      32938
+    ]
+  },
+  {
+    "profile_id": "p_045",
+    "profile_type": "conflicting",
+    "conflict_pattern": "diet_vs_liked_ingredient",
+    "cuisine_prefs": [
+      "french"
+    ],
+    "diet": [
+      "vegan"
+    ],
+    "max_cook_minutes": 45,
+    "liked_ingredients": [
+      "shrimp"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      206627,
+      375705,
+      297252
+    ]
+  },
+  {
+    "profile_id": "p_046",
+    "profile_type": "conflicting",
+    "conflict_pattern": "diet_vs_liked_ingredient",
+    "cuisine_prefs": [
+      "greek"
+    ],
+    "diet": [
+      "vegetarian"
+    ],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      419869,
+      268033
+    ]
+  },
+  {
+    "profile_id": "p_047",
+    "profile_type": "conflicting",
+    "conflict_pattern": "diet_vs_history",
+    "cuisine_prefs": [
+      "caribbean"
+    ],
+    "diet": [
+      "vegetarian"
+    ],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      416252,
+      35622
+    ]
+  },
+  {
+    "profile_id": "p_048",
+    "profile_type": "conflicting",
+    "conflict_pattern": "diet_vs_history",
+    "cuisine_prefs": [
+      "greek",
+      "thai"
+    ],
+    "diet": [
+      "vegan"
+    ],
+    "max_cook_minutes": 30,
+    "liked_ingredients": [
+      "salmon"
+    ],
+    "exclusions": [],
+    "rated_highly": [
+      191045,
+      54232
+    ]
+  },
+  {
+    "profile_id": "p_049",
+    "profile_type": "conflicting",
+    "conflict_pattern": "cuisine_vs_exclusions",
+    "cuisine_prefs": [
+      "thai"
+    ],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "salmon",
+      "shrimp"
+    ],
+    "exclusions": [
+      "no_cilantro",
+      "no_peanut"
+    ],
+    "rated_highly": [
+      272668,
+      426579,
+      324669
+    ]
+  },
+  {
+    "profile_id": "p_050",
+    "profile_type": "conflicting",
+    "conflict_pattern": "cuisine_vs_exclusions",
+    "cuisine_prefs": [
+      "cajun"
+    ],
+    "diet": [],
+    "max_cook_minutes": 20,
+    "liked_ingredients": [
+      "mushroom",
+      "salmon"
+    ],
+    "exclusions": [
+      "no_shellfish"
+    ],
+    "rated_highly": [
+      115147,
+      290295
+    ]
+  }
+]

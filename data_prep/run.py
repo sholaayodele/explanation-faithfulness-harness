@@ -54,6 +54,16 @@ def _ratings_stats(interactions: pd.DataFrame) -> pd.DataFrame:
     return interactions.groupby("recipe_id")["rating"].agg(n_ratings="count", avg_rating="mean")
 
 
+def _check_no_vegetarian_vegan_meat(df: pd.DataFrame) -> None:
+    """Invariant: no vegetarian/vegan recipe may have a meat/fish main_ingredient."""
+    is_veg = df["diet_tags"].apply(lambda d: "vegetarian" in d or "vegan" in d)
+    bad = df[is_veg & df["main_ingredient"].isin(["chicken", "beef", "pork", "shrimp", "salmon"])]
+    if len(bad) > 0:
+        raise AssertionError(
+            f"{len(bad)} vegetarian/vegan recipe(s) have a meat/fish main_ingredient: {bad['id'].tolist()}"
+        )
+
+
 def build() -> tuple[pd.DataFrame, int]:
     """Return (cleaned recipes dataframe, count of veg/vegan recipes dropped by the meat check)."""
     recipes = pd.read_csv(RAW_RECIPES)
@@ -84,6 +94,7 @@ def build() -> tuple[pd.DataFrame, int]:
 
     filtered = filtered.drop(columns=["tags", "ingredients"]).rename(columns={"ingredients_parsed": "ingredients"})
     out = filtered[OUTPUT_COLUMNS]
+    _check_no_vegetarian_vegan_meat(out)
     return out, n_dropped_veg
 
 
@@ -109,6 +120,7 @@ def _report(df: pd.DataFrame, n_dropped_veg: int) -> None:
 
 def main() -> None:
     out, n_dropped_veg = build()
+    print("Invariant check (no vegetarian/vegan recipe has a meat/fish main_ingredient): PASSED")
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     to_write = out.copy()

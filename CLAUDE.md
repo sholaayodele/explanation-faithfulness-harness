@@ -89,13 +89,16 @@ Locked decisions for data prep and the matcher (Shola-approved; changes need sig
   - **Exclusions** (`excluded_by`): `pork` (incl. `bacon`, `ham`), `beef`, `shellfish`, `peanut`, `mushroom`, `cilantro` — match any form of the ingredient.
 - **`main_ingredient` derivation** (`data_prep`), resolving the likes above via synonyms:
   - Synonyms: `pork` ← `bacon`, `ham`, `prosciutto` (and pork cuts, already literal matches); `beef` ← `steak`, `sirloin`, `brisket`, `chuck`; `shrimp` ← `prawn(s)`. `chicken` and `salmon` have no added synonyms.
-  - Any other meat/fish term (`turkey`, `lamb`, `veal`, `sausage`, `tuna`, `fish`, `crab`, `lobster`, `clam`, `mussel`, `oyster`, `scallop`, `anchovy`, `gelatin`) counts as "other protein": it blocks `mushroom` and nulls `main_ingredient` if present alongside any candidate.
+  - Any other meat/fish term (`turkey`, `lamb`, `veal`, `sausage`, `tuna`, `fish`, `crab`, `lobster`, `clam`, `mussel`, `oyster`, `scallop`, `anchovy`, `gelatin`, plus processed/ambiguous meats: `frank(s)`, `hot dog(s)`, `pepperoni`, `salami`, `chorizo`, `kielbasa`, `bratwurst`, `meatball(s)`, `ground meat`, `lunch meat`, `deli meat`, `spam`, `venison`, `duck`) counts as "other protein": it blocks `mushroom` and nulls `main_ingredient` if present alongside any candidate.
   - 2+ distinct proteins (after synonym mapping) → `null` (ambiguous), as with cuisine.
-  - Broth/stock/bouillon forms are still ignored for `main_ingredient` (but **not** for the vegetarian/vegan contamination check below — a "vegetarian" recipe containing chicken broth is still dropped).
+  - **Condiment vs. animal-derived modifier forms:** `main_ingredient` ignores both *condiment* forms (`sauce`, `seasoning` — e.g. "steak sauce" isn't beef) and *animal-derived* forms (`broth`, `stock`, `bouillon`, `gravy`, `drippings` — e.g. "chicken broth" isn't the dish's main ingredient). The vegetarian/vegan contamination check ignores only condiment forms — animal-derived forms still count there, since a "vegetarian" recipe containing chicken broth is a real contradiction and is still dropped.
+  - **Single term source:** the contamination check's term list is generated automatically from `main_ingredient`'s own vocabulary (every `CATEGORY_TERMS` synonym + every `OTHER_PROTEIN_TERMS` entry, in `ingredient_matching.py`), so the two can't drift apart. `data_prep` also asserts the invariant that no vegetarian/vegan recipe ends up with a meat/fish `main_ingredient`.
+  - Standard profiles with a `vegetarian`/`vegan` diet may only have `liked_ingredients` of `[]` or `["mushroom"]` — a truthful diet-vs-liked-ingredient conflict only ever appears in the dedicated `diet_vs_liked_ingredient` conflicting-profile pattern, never by accident in a standard profile.
 - **TIME_FIT:** compares `recipe.minutes` to the profile's `max_cook_minutes`, which is one of `20 | 30 | 45 | 60`.
 - **POPULAR_FALLBACK pool:** recipes with ≥20 ratings and average rating ≥4.0, computed from `RAW_interactions.csv`.
 - **SIMILAR_TO_RATED:** same cuisine **and** same main protein as a recipe the profile rated highly.
 - **Health tags** (`low-calorie`, `low-carb`, `low-sodium`, `low-cholesterol`, `healthy`): never used as reasons (no health/weight inferences), but kept in the recipe data passed to the generator.
+- **Conflict rule:** diet and exclusions always override preferences and history. The matcher never uses a contradicted signal as a reason (no `LIKED_INGREDIENT` or `SIMILAR_TO_RATED` that conflicts with diet or exclusions).
 
 ## Metrics
 - Faithfulness rate (all claims supported)

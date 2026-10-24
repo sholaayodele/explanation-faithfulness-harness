@@ -1,6 +1,55 @@
-"""Shared whole-word ingredient-term matching, used by data_prep and schema/validator."""
+"""Shared ingredient-term vocabulary and whole-word matching.
+
+Single source of truth for data_prep (main_ingredient, vegetarian/vegan
+contamination) and schema/validator (excluded_by), so the two can't drift.
+"""
 
 import re
+
+# excluded_by code -> forms it covers, any of which disqualify a recipe.
+EXCLUSION_FORMS: dict[str, list[str]] = {
+    "no_pork": ["pork", "bacon", "ham"],
+    "no_beef": ["beef"],
+    "no_shellfish": ["shellfish", "shrimp", "prawn", "crab", "lobster", "clam", "mussel", "oyster", "scallop"],
+    "no_peanut": ["peanut"],
+    "no_mushroom": ["mushroom"],
+    "no_cilantro": ["cilantro"],
+}
+
+# main_ingredient categories, each with its synonyms. Cuts like "pork chop"
+# already contain the literal word "pork", so only true synonyms are added.
+CATEGORY_TERMS: dict[str, list[str]] = {
+    "chicken": ["chicken"],
+    "beef": ["beef", "steak", "sirloin", "brisket", "chuck"],
+    "pork": ["pork", "bacon", "ham", "prosciutto"],
+    "shrimp": ["shrimp", "prawn"],
+    "salmon": ["salmon"],
+}
+MUSHROOM_TERMS: list[str] = ["mushroom"]
+
+# Any other meat/fish term: not one of the 6 likes/synonyms above, but still
+# disqualifies main_ingredient (blocks mushroom, nulls out any candidate) and
+# counts toward vegetarian/vegan contamination.
+OTHER_PROTEIN_TERMS: list[str] = [
+    "turkey", "lamb", "veal", "sausage", "tuna", "fish",
+    "crab", "lobster", "clam", "mussel", "oyster", "scallop", "anchovy", "gelatin",
+    "frank", "hot dog", "pepperoni", "salami", "chorizo", "kielbasa", "bratwurst",
+    "meatball", "ground meat", "lunch meat", "deli meat", "spam", "venison", "duck",
+]
+
+# Modifier forms that disqualify an otherwise-matching ingredient:
+# - condiment forms (e.g. "steak sauce") aren't meat themselves.
+# - animal-derived forms (e.g. "chicken broth") still are, but aren't the
+#   dish's *main* ingredient - so they're excluded from main_ingredient only,
+#   not from the vegetarian/vegan contamination check.
+CONDIMENT_FORMS: list[str] = ["sauce", "seasoning"]
+ANIMAL_DERIVED_FORMS: list[str] = ["broth", "stock", "bouillon", "gravy", "drippings"]
+
+# Single source of truth: every main_ingredient term (likes + other-protein),
+# so the contamination check can't drift from main_ingredient's vocabulary.
+MEAT_FISH_CONTAMINANTS: list[str] = sorted(
+    {term for terms in CATEGORY_TERMS.values() for term in terms} | set(OTHER_PROTEIN_TERMS)
+)
 
 
 def mentions_term(ingredient: str, term: str) -> bool:
@@ -11,3 +60,17 @@ def mentions_term(ingredient: str, term: str) -> bool:
     Works for multi-word terms too (e.g. "hot dog"), matched as a phrase.
     """
     return re.search(r"\b" + re.escape(term) + r"s?\b", ingredient, re.IGNORECASE) is not None
+
+
+def matches_exclusion(ingredients: list[str], exclusion_code: str) -> bool:
+    """True if any ingredient matches any form of the given excluded_by code."""
+    terms = EXCLUSION_FORMS.get(exclusion_code, [])
+    return any(mentions_term(ing, term) for ing in ingredients for term in terms)
+
+
+def is_condiment_form(ingredient: str) -> bool:
+    return any(mentions_term(ingredient, form) for form in CONDIMENT_FORMS)
+
+
+def is_animal_derived_form(ingredient: str) -> bool:
+    return any(mentions_term(ingredient, form) for form in ANIMAL_DERIVED_FORMS)

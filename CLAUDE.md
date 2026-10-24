@@ -155,7 +155,7 @@ notebooks/         # exploration only
 - [x] 1. Environment setup + `check_setup.py` passes
 - [x] 2. Schema + validator
 - [x] 3. Data prep on RAW_recipes.csv
-- [ ] 4. Synthetic profiles
+- [x] 4. Synthetic profiles
 - [ ] 5. Matcher + 200-case eval set
 - [ ] 6. v1 generator (10 cases, then 200)
 - [ ] 7. Rule checks + LLM judge

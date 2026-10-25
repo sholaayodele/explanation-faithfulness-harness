@@ -159,21 +159,11 @@ def _call_judge(client: anthropic.Anthropic, prompt_text: str) -> tuple[str, int
     return text, response.usage.input_tokens, response.usage.output_tokens
 
 
-def judge_case(
+def _judge_once(
     client: anthropic.Anthropic, generator_version: str, case_id: str, payload: dict, explanation: str,
     judge_prompt_text: str, judge_prompt_hash: str,
 ) -> dict:
-    cache_path = _cache_path(generator_version, case_id)
-    if cache_path.exists():
-        cached = json.loads(cache_path.read_text())
-        if cached["judge_prompt_hash"] != judge_prompt_hash:
-            raise RuntimeError(
-                f"Cached judgment for {case_id} was generated with a different judge prompt "
-                f"(hash {cached['judge_prompt_hash'][:12]}... vs current {judge_prompt_hash[:12]}...). "
-                "Delete the stale cache entry or bump the judge prompt version before rerunning."
-            )
-        return cached
-
+    """One full judge pass (LLM call + validation/retry + binding-check merge), no caching."""
     rule_checks = check_rules(payload, explanation)
     llm_visible_rule_checks = {k: rule_checks[k] for k in LLM_VISIBLE_RULE_CHECK_KEYS}
     filled_prompt = (
@@ -245,8 +235,28 @@ def judge_case(
         "tokens": tokens,
         "judge_prompt_hash": judge_prompt_hash,
     }
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    cache_path.write_text(json.dumps(result, indent=2))
+    return result
+
+
+def judge_case(
+    client: anthropic.Anthropic, generator_version: str, case_id: str, payload: dict, explanation: str,
+    judge_prompt_text: str, judge_prompt_hash: str,
+) -> dict:
+    cache_path = _cache_path(generator_version, case_id)
+    if cache_path.exists():
+        cached = json.loads(cache_path.read_text())
+        if cached["judge_prompt_hash"] != judge_prompt_hash:
+            raise RuntimeError(
+                f"Cached judgment for {case_id} was generated with a different judge prompt "
+                f"(hash {cached['judge_prompt_hash'][:12]}... vs current {judge_prompt_hash[:12]}...). "
+                "Delete the stale cache entry or bump the judge prompt version before rerunning."
+            )
+        return cached
+
+    result = _judge_once(client, generator_version, case_id, payload, explanation, judge_prompt_text, judge_prompt_hash)
+    if result["verdict"] != "judge_error":
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        cache_path.write_text(json.dumps(result, indent=2))
     return result
 
 
@@ -268,11 +278,54 @@ def _write_judgments(generator_version: str, results: list[dict]) -> Path:
     return out_path
 
 
+def run_self_agreement(
+    client: anthropic.Anthropic, generator_version: str, case_ids: list[str],
+    eval_rows: dict[str, dict], outputs: dict[str, dict],
+    judge_prompt_text: str, judge_prompt_hash: str, repeat: int,
+) -> dict:
+    """Judge each case `repeat` times, bypassing cache entirely, to measure consistency."""
+    per_case_runs = {}
+    total_input = 0
+    total_output = 0
+    for case_id in case_ids:
+        payload = eval_rows[case_id]["payload"]
+        explanation = outputs[case_id]["explanation"]
+        runs = []
+        for _ in range(repeat):
+            result = _judge_once(client, generator_version, case_id, payload, explanation, judge_prompt_text, judge_prompt_hash)
+            total_input += result["tokens"]["input"]
+            total_output += result["tokens"]["output"]
+            runs.append(result)
+        per_case_runs[case_id] = runs
+
+    verdict_matches = 0
+    failure_type_matches = 0
+    for case_id, runs in per_case_runs.items():
+        verdicts = {r["verdict"] for r in runs}
+        failure_sets = {frozenset(r.get("failure_types", [])) for r in runs}
+        if len(verdicts) == 1:
+            verdict_matches += 1
+        if len(failure_sets) == 1:
+            failure_type_matches += 1
+
+    n = len(per_case_runs)
+    return {
+        "n_cases": n,
+        "repeat": repeat,
+        "verdict_match_rate": verdict_matches / n,
+        "failure_type_match_rate": failure_type_matches / n,
+        "tokens": {"input": total_input, "output": total_output},
+        "per_case_runs": per_case_runs,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", required=True, help="generator version to judge")
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--case-ids", default=None)
+    parser.add_argument("--no-cache", action="store_true", help="bypass cache entirely (used with --repeat)")
+    parser.add_argument("--repeat", type=int, default=1, help="judge each case this many times, for self-agreement")
     args = parser.parse_args()
 
     judge_prompt_text = _load_prompt()
@@ -288,6 +341,23 @@ def main() -> None:
             case_ids = case_ids[: args.limit]
 
     client = anthropic.Anthropic()
+
+    if args.no_cache and args.repeat > 1:
+        agreement = run_self_agreement(
+            client, args.version, case_ids, eval_rows, outputs, judge_prompt_text, judge_prompt_hash, args.repeat
+        )
+        pricing = {"input": 2.00 / 1_000_000, "output": 10.00 / 1_000_000}
+        cost = agreement["tokens"]["input"] * pricing["input"] + agreement["tokens"]["output"] * pricing["output"]
+        out_path = OUT_DIR / f"{args.version}_judge_self_agreement.json"
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps({**agreement, "estimated_cost": cost}, indent=2))
+        print(f"Self-agreement over {agreement['n_cases']} cases, {args.repeat} runs each:")
+        print(f"  verdict_match_rate: {agreement['verdict_match_rate']:.3f}")
+        print(f"  failure_type_match_rate: {agreement['failure_type_match_rate']:.3f}")
+        print(f"  tokens: input={agreement['tokens']['input']}, output={agreement['tokens']['output']}")
+        print(f"  estimated cost: ${cost:.4f}")
+        print(f"  wrote {out_path}")
+        return
 
     results = []
     errors = 0

@@ -13,7 +13,7 @@ output.
 | 2026-10-25 | 8 | Judge v2, adjudicated gold set | claude-sonnet-5-5 | 50 | 139,800 | 28,024 | $0.5598 |
 | 2026-10-25 | 8 | Judge v2, fresh hold-out | claude-sonnet-5-5 | 20 | 55,872 | 11,396 | $0.2257 |
 | 2026-10-25 | 9 | Judge v2, full eval set (130 newly judged, 70 reused from cache) | claude-sonnet-5-5 | 130 | 363,772 | 77,093 | $1.4985 |
+| 2026-10-25 | 10 | Generator v2, full eval set (190 newly generated, 10 reused from cache) | claude-haiku-5-5 | 190 | 593,656 | 11,541 | $0.0651 |
+| 2026-10-25 | 10 | Judge v2 on generator v2 outputs, full eval set | claude-sonnet-5-5 | 200 | 557,205 | 97,865 | $2.0931 |
 
-**Running project total: $5.7345** of the ~€10 budget.
-
-Not yet run / not included: v2 generator guardrails and any full-200-case v2 rerun (step 10).
+**Running project total: $7.8927** of the ~€10 budget.

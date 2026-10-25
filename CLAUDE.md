@@ -219,5 +219,5 @@ notebooks/         # exploration only
 - [x] 7. Rule checks + LLM judge
 - [x] 8. Gold labels + judge validation — first pass κ=0.271 (n=50); judge self-agreement 98%; adjudicated (0 judge errors, 12 my slips, 6 rubric gaps → rulings 1–5); judge v2 κ=0.958 on tuning set; fresh blind hold-out κ=0.327 (n=20), judge correct on all 7 disagreements on adjudication. Judge v2 is the validated judge. See `results/judge_validation.md` and `judge_validation_v2.md`.
 - [x] 9. v1 metrics
-- [ ] 10. v2 guardrails + rerun + comparison chart
+- [x] 10. v2 guardrails + rerun + comparison chart — faithfulness 52.5% → 92.0% (McNemar p<0.0001), 8/9 pre-registered criteria met; `fallback` stress case_type not met (16.7%, unchanged from v1) — see `results/v1_vs_v2.md`
 - [ ] 11. README case study (Shola writes; Claude helps format)

@@ -3,3 +3,4 @@ anthropic
 scikit-learn
 python-dotenv
 jsonschema
+matplotlib

@@ -164,6 +164,13 @@ def validate_judgment(data: object, valid_failure_types: set[str]) -> list[str]:
             errors.append(
                 f"verdict/failure_types inconsistent: verdict={data['verdict']!r}, failure_types={failure_types!r}"
             )
+        any_unsupported = isinstance(data["claims"], list) and any(
+            isinstance(c, dict) and c.get("supported") is False for c in data["claims"]
+        )
+        if any_unsupported and not is_fail:
+            errors.append(
+                f"claim with supported=false but verdict={data['verdict']!r} (expected 'fail')"
+            )
 
     if not isinstance(data.get("rationale"), str):
         errors.append("rationale is not a string")

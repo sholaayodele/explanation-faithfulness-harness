@@ -6,8 +6,13 @@ results, and never suggests an answer. Saves after every case, so quitting
 ("q") and rerunning resumes where you left off. "b" revisits the previous case.
 
 Usage:
-    python -m gold.label               # label data/gold/to_label.csv
-    python -m gold.label --adjudicate   # resolve verdict disagreements with the judge
+    python -m gold.label                                              # label data/gold/to_label.csv
+    python -m gold.label --adjudicate                                 # resolve gold_labels.csv vs. judge v1
+    python -m gold.label --adjudicate --cases c_0001,c_0002            # re-prompt just these (e.g. a 2nd pass)
+    python -m gold.label --adjudicate --file data/gold/gold_labels_fresh.csv   # resolve a different gold file
+                                                                        # vs. its judge v2 output; writes to
+                                                                        # gold_labels_fresh_adjudicated.csv,
+                                                                        # never edits gold_labels_fresh.csv
 """
 
 import argparse
@@ -20,6 +25,7 @@ SEED = 11
 TO_LABEL_PATH = Path("data/gold/to_label.csv")
 GOLD_PATH = Path("data/gold/gold_labels.csv")
 EVAL_SET_PATH = Path("data/processed/eval_set.jsonl")
+OUT_DIR = Path("results")
 JUDGMENTS_PATH = Path("results/v1_judgments.jsonl")
 ADJUDICATED_PATH = Path("data/gold/gold_labels_adjudicated.csv")
 
@@ -150,9 +156,21 @@ def _prompt_change_reason() -> str:
     return input("Change reason (short): ").strip()
 
 
-def _load_judgments() -> dict[str, dict]:
+def _judgments_path_for(judge_version: str, generator_version: str = "v1") -> Path:
+    """Mirrors judge.run._write_judgments' naming: v1 keeps the plain filename,
+    v2+ gets a `_judge_{version}` marker."""
+    suffix = "" if judge_version == "v1" else f"_judge_{judge_version}"
+    return OUT_DIR / f"{generator_version}{suffix}_judgments.jsonl"
+
+
+def _adjudicated_path_for(gold_path: Path) -> Path:
+    """gold_labels.csv -> gold_labels_adjudicated.csv; gold_labels_fresh.csv -> gold_labels_fresh_adjudicated.csv."""
+    return gold_path.with_name(f"{gold_path.stem}_adjudicated{gold_path.suffix}")
+
+
+def _load_judgments(judgments_path: Path) -> dict[str, dict]:
     judgments = {}
-    with JUDGMENTS_PATH.open() as f:
+    with judgments_path.open() as f:
         for line in f:
             row = json.loads(line)
             judgments[row["case_id"]] = row
@@ -168,10 +186,10 @@ def _load_eval_payloads() -> dict[str, dict]:
     return payloads
 
 
-def _load_existing_adjudications() -> dict[str, dict]:
-    if not ADJUDICATED_PATH.exists():
+def _load_existing_adjudications(adjudicated_path: Path) -> dict[str, dict]:
+    if not adjudicated_path.exists():
         return {}
-    with ADJUDICATED_PATH.open(newline="") as f:
+    with adjudicated_path.open(newline="") as f:
         rows = list(csv.DictReader(f))
     return {row["case_id"]: row for row in rows if row.get("adjudicated") == "yes"}
 
@@ -208,8 +226,8 @@ def _display_adjudication_case(gold_row: dict, judge_row: dict, payload: dict, p
     print(f"  Rationale: {judge_row.get('rationale', '(none)')}")
 
 
-def _save_adjudicated(gold_rows: list[dict], adjudications: dict[str, dict]) -> None:
-    with ADJUDICATED_PATH.open("w", newline="") as f:
+def _save_adjudicated(gold_rows: list[dict], adjudications: dict[str, dict], adjudicated_path: Path) -> None:
+    with adjudicated_path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=ADJUDICATED_COLUMNS)
         writer.writeheader()
         for row in gold_rows:
@@ -224,25 +242,40 @@ def _save_adjudicated(gold_rows: list[dict], adjudications: dict[str, dict]) -> 
             writer.writerow(out_row)
 
 
-def run_adjudicate(cases: list[str] | None = None) -> None:
-    """Walk the 18 verdict disagreements. With `cases`, only re-prompts that
-    specific subset (e.g. a second pass) - every other case's prior
-    adjudication is kept exactly as it is in gold_labels_adjudicated.csv."""
-    gold_rows = _load_gold_labels()
+def run_adjudicate(
+    cases: list[str] | None = None, gold_path: Path = GOLD_PATH, judge_version: str | None = None,
+) -> None:
+    """Walk the verdict disagreements between `gold_path` and the matching judge
+    output. With `cases`, only re-prompts that specific subset (e.g. a second
+    pass) - every other case's prior adjudication is kept exactly as it is in
+    the matching `*_adjudicated.csv`. `gold_path` is only ever read, never
+    written - adjudications always go to a separate `*_adjudicated.csv`.
+
+    `judge_version` picks which judge output to compare against (default:
+    `v1` for the original `gold_labels.csv`, `v2` for anything else - the
+    only other ruleset any gold file has been judged with so far)."""
+    if judge_version is None:
+        judge_version = "v1" if gold_path == GOLD_PATH else "v2"
+    judgments_path = _judgments_path_for(judge_version)
+    adjudicated_path = _adjudicated_path_for(gold_path)
+
+    gold_rows = _load_gold_labels(gold_path)
     gold_by_id = {row["case_id"]: row for row in gold_rows}
-    judgments = _load_judgments()
+    judgments = _load_judgments(judgments_path)
     payloads = _load_eval_payloads()
+
+    print(f"Comparing {gold_path} against {judgments_path} (judge {judge_version}); saving to {adjudicated_path}.")
 
     all_disagreement_ids = [
         row["case_id"] for row in gold_rows
         if row["my_verdict"].strip().lower() != judgments[row["case_id"]]["verdict"]
     ]
-    existing = _load_existing_adjudications()
+    existing = _load_existing_adjudications(adjudicated_path)
 
     if cases:
         unknown = [c for c in cases if c not in all_disagreement_ids]
         if unknown:
-            print(f"Note: {unknown} weren't in the original 18 verdict disagreements - including anyway.")
+            print(f"Note: {unknown} weren't in the original {len(all_disagreement_ids)} verdict disagreements - including anyway.")
         disagreement_ids = cases
         adjudications = dict(existing)  # keep every other case's prior adjudication intact
         for cid in cases:
@@ -291,7 +324,7 @@ def run_adjudicate(cases: list[str] | None = None) -> None:
                 "bucket": bucket,
                 "change_reason": change_reason,
             }
-            _save_adjudicated(gold_rows, adjudications)
+            _save_adjudicated(gold_rows, adjudications, adjudicated_path)
             index += 1
             print(f"Saved. Progress: {index}/{total}")
     except (KeyboardInterrupt, EOFError):
@@ -301,8 +334,8 @@ def run_adjudicate(cases: list[str] | None = None) -> None:
     print(f"\nAll {total} disagreements adjudicated.")
 
 
-def _load_gold_labels() -> list[dict]:
-    with GOLD_PATH.open(newline="") as f:
+def _load_gold_labels(gold_path: Path = GOLD_PATH) -> list[dict]:
+    with gold_path.open(newline="") as f:
         return list(csv.DictReader(f))
 
 
@@ -379,8 +412,22 @@ if __name__ == "__main__":
              "every other case's prior adjudication is left exactly as it is",
     )
     parser.add_argument(
-        "--file", type=Path, default=TO_LABEL_PATH,
-        help="to_label CSV to work through (writes to the matching gold_labels_*.csv alongside it)",
+        "--file", type=Path, default=None,
+        help="without --adjudicate: a to_label CSV to work through (writes to the matching gold_labels_*.csv "
+             "alongside it). With --adjudicate: a gold_labels_*.csv to adjudicate directly (writes to the "
+             "matching gold_labels_*_adjudicated.csv alongside it; the input file is never edited).",
+    )
+    parser.add_argument(
+        "--judge-version", default=None, choices=["v1", "v2"],
+        help="with --adjudicate: which judge output to compare against (default: v1 for gold_labels.csv, "
+             "v2 for any other --file)",
     )
     args = parser.parse_args()
-    run_adjudicate(args.cases.split(",") if args.cases else None) if args.adjudicate else main(args.file)
+    if args.adjudicate:
+        run_adjudicate(
+            args.cases.split(",") if args.cases else None,
+            gold_path=args.file if args.file is not None else GOLD_PATH,
+            judge_version=args.judge_version,
+        )
+    else:
+        main(args.file if args.file is not None else TO_LABEL_PATH)

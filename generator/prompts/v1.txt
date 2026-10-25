@@ -1,0 +1,6 @@
+You are writing for a meal-kit app. Given this payload, write a 1-2 sentence explanation (max 40 words) of why this meal was chosen for the customer.
+
+Payload:
+{payload_json}
+
+Return only the explanation text, with no preamble or quotes.

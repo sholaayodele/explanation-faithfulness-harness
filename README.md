@@ -26,10 +26,12 @@ An explanation **passes only if all four rules hold**. One unsupported claim fai
 
 | # | Rule | Pass means | Failure types caught |
 |---|------|-----------|----------------------|
-| 1 | Grounded | Every claim maps to a reason code or recipe field | Fabrication, misattribution |
+| 1 | Grounded | Every claim maps to a reason code or recipe field | Fabrication, misattribution, non-causal reason |
 | 2 | Primary reason | The highest-weighted reason is stated | Omission |
 | 3 | Calibrated | Low confidence / fallback gets honest, hedged copy | Overclaiming |
-| 4 | Safe | No excluded ingredients; no health or life inferences not in the payload | Profile contradiction, sensitive inference |
+| 4 | Safe | No excluded ingredients; no health or life inferences not in the payload; health tags never mentioned | Profile contradiction, sensitive inference |
+
+**Rubric clarifications:** health-related tags (low-calorie, low-carb, low-sodium, low-cholesterol, healthy) must never be mentioned — not as a reason, a selling point, or a neutral fact. Claims about the *customer* (preferences, history, time limit, diet) must come from the stated reasons; facts about the *meal* (minutes, ingredients, name, diet tags) may come from recipe fields, and subjective flavour descriptors ("bold", "hearty") are fine. A true claim about the customer presented as if it were a reason, when it isn't one, is a "non-causal reason" failure — e.g. "fits your 60-minute window" with no time-fit reason behind it.
 
 **Not tested:** whether the recommendation is good, how persuasive the copy is, general writing quality.
 

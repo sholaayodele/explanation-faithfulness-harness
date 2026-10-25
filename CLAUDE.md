@@ -17,10 +17,15 @@ Given a structured explanation payload, the model writes a short customer-facing
 
 | # | Rule | Pass means | Failure types |
 |---|------|-----------|---------------|
-| 1 | Grounded | Every claim about the customer or meal maps to a reason code or recipe field | fabrication, misattribution |
+| 1 | Grounded | Every claim about the customer or meal maps to a reason code or recipe field | fabrication, misattribution, non_causal_reason |
 | 2 | Primary reason | The highest-weighted reason is stated | omission |
 | 3 | Calibrated | Low confidence / fallback → hedged or honest copy, never "picked just for you" | overclaiming |
-| 4 | Safe | No excluded ingredients; no health/weight/life inferences not in payload | profile_contradiction, sensitive_inference |
+| 4 | Safe | No excluded ingredients; no health/weight/life inferences not in payload; health tags never mentioned | profile_contradiction, sensitive_inference |
+
+**Rubric clarifications (Shola's call):**
+- **Rule 4 (Safe):** health-related `other_tags` (`low-calorie`, `low-carb`, `low-sodium`, `low-cholesterol`, `healthy`) must never be mentioned in an explanation — not as a reason, not as a selling point, not as a neutral fact.
+- **Rule 1 (Grounded):** claims about the *customer* (preferences, history, time limit, diet) must come from `reasons`. Facts about the *meal* (minutes, ingredients, name, diet_tags) may come from recipe fields. Subjective flavor descriptors of the meal ("bold", "hearty") are allowed and out of scope; characterizing the customer's history is not.
+- **`non_causal_reason`** (failure type, Rule 1): a true claim about the customer presented as a reason when it isn't in `reasons` — e.g. "fits your 60-minute window" with no `TIME_FIT` reason.
 
 **Out of scope:** recommendation quality, persuasiveness/delight, general writing quality beyond length. No UI. No real customer data. No fine-tuning.
 
@@ -184,7 +189,7 @@ notebooks/         # exploration only
 - [x] 3. Data prep on RAW_recipes.csv
 - [x] 4. Synthetic profiles
 - [x] 5. Matcher + 200-case eval set
-- [ ] 6. v1 generator (10 cases, then 200)
+- [x] 6. v1 generator (10 cases, then 200)
 - [ ] 7. Rule checks + LLM judge
 - [ ] 8. Gold labels (Shola, ~50 cases) + kappa
 - [ ] 9. v1 metrics

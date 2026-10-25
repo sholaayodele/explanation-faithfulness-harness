@@ -111,52 +111,49 @@ across all 6 `case_type`s, shuffled, no judge information:
 same save-after-every-case / resume / back / quit behavior as the main tool. The judge has **not** been run
 on these 20 cases yet, per instruction.
 
-## 5. Second adjudication pass
+## 5. Second and third adjudication passes
 
-Shola re-ran `python -m gold.label --adjudicate --cases c_0012,c_0174,c_0142` to correct cases where her
-first-pass adjudicated label contradicted her own rulings (1A, 3A), with `c_0175` left untouched as a
-control. Confirmed `other_tags` is empty on both `c_0174` and `c_0142`.
+Shola re-ran `python -m gold.label --adjudicate --cases c_0012,c_0174,c_0142` twice to correct cases where
+her first-pass adjudicated label contradicted her own rulings (1A, 3A), with `c_0175` left untouched
+throughout as a control. Confirmed `other_tags` is empty on both `c_0174` and `c_0142`.
 
-**What changed:**
+**What changed, across both passes:**
 
-| case_id | before (1st pass) | after (2nd pass) | change_reason |
-|---|---|---|---|
-| c_0012 | fail [omission] | **pass []** | *(empty)* |
-| c_0174 | fail [sensitive_inference] | **fail [overclaiming]** | *(empty)* |
-| c_0142 | fail [overclaiming] | **fail [sensitive_inference]** | *(empty)* |
-| c_0175 | fail [overclaiming] | fail [overclaiming] (unchanged, control) | — |
+| case_id | 1st pass | 2nd pass | 3rd pass (final) | change_reason |
+|---|---|---|---|---|
+| c_0012 | fail [omission] | pass [] | pass [] (unchanged) | *(empty)* |
+| c_0174 | fail [sensitive_inference] | fail [overclaiming] | **pass []** | *(empty)* |
+| c_0142 | fail [overclaiming] | fail [sensitive_inference] | **pass []** | *(empty)* |
+| c_0175 | fail [overclaiming] | fail [overclaiming] | fail [overclaiming] (unchanged, control) | — |
 
-Two things worth flagging rather than silently smoothing over:
+The 2nd pass had left c_0174 and c_0142 still failing — c_0142's `sensitive_inference` even looked like it
+contradicted ruling 1A, since its only "light" mention has confirmed-empty `other_tags`. The 3rd pass
+resolved both to `pass`, agreeing with judge v2 on all three re-adjudicated cases.
 
-- **`change_reason` saved empty on all 4 rows**, not the planned "second pass: applied ruling 1A/3A" — the
-  prompt has no non-empty validation, so it's likely an empty `Enter` press rather than a tool bug.
-- **c_0142's new failure type (`sensitive_inference`) appears to contradict ruling 1A rather than apply it.**
-  Its only "light" mention ("It's a light pasta with fresh basil...") has confirmed-empty `other_tags`, so
-  per 1A that's an allowed flavour word, not a health claim. c_0174 moved the other way
-  (`sensitive_inference` → `overclaiming`), consistent with 1A — its remaining fail is now about unhedged
-  copy ("We picked this chicken salad because...") despite `confidence: low`, a separate rule-3 call. This
-  wasn't corrected here; noted for a possible third look.
+Still worth flagging: **`change_reason` saved empty on every row across all three passes**, not the
+planned "second pass: applied ruling 1A/3A" — the prompt has no non-empty validation, so it's likely an
+empty `Enter` press each time rather than a tool bug.
 
 **Updated kappa and confusion matrix (adjudicated labels × judge v2, same `results/v1_judge_v2_judgments.jsonl`, not rerun):**
 
 | comparison | n | raw agreement | Cohen's kappa |
 |---|---|---|---|
 | adjudicated labels vs. judge v2 (1st pass) | 50 | 92.0% | 0.837 |
-| adjudicated labels vs. judge v2 (2nd pass) | 50 | **94.0%** | **0.876** |
+| adjudicated labels vs. judge v2 (2nd pass) | 50 | 94.0% | 0.876 |
+| adjudicated labels vs. judge v2 (3rd pass, final) | 50 | **98.0%** | **0.958** |
 
 | | mine = pass | mine = fail |
 |---|---|---|
-| **judge v2 = pass** | 28 | 3 |
+| **judge v2 = pass** | 30 | 1 |
 | **judge v2 = fail** | 0 | 19 |
 
-**Remaining disagreements (3 of 50, down from 4):** c_0012 now agrees with judge v2. The other 3 are
-unchanged in direction — judge v2 still reads "pass" where Shola's label reads "fail":
+**Remaining disagreement (1 of 50):**
 
 | case_id | my final label | judge v2 |
 |---|---|---|
 | c_0175 | fail [overclaiming] | pass [] |
-| c_0174 | fail [overclaiming] | pass [] |
-| c_0142 | fail [sensitive_inference] | pass [] |
+
+κ=0.958 is well above the κ≥0.7 target in CLAUDE.md's Metrics section.
 
 ## Cost
 

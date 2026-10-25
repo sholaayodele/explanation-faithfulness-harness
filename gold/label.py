@@ -53,15 +53,21 @@ RULES_REMINDER = (
 )
 
 
-def _load_to_label() -> list[dict]:
-    with TO_LABEL_PATH.open(newline="") as f:
+def _gold_path_for(to_label_path: Path) -> Path:
+    """data/gold/to_label.csv -> gold_labels.csv; to_label_fresh.csv -> gold_labels_fresh.csv."""
+    name = to_label_path.name.replace("to_label", "gold_labels", 1)
+    return to_label_path.with_name(name)
+
+
+def _load_to_label(to_label_path: Path) -> list[dict]:
+    with to_label_path.open(newline="") as f:
         return list(csv.DictReader(f))
 
 
-def _load_existing_answers() -> dict[str, dict]:
-    if not GOLD_PATH.exists():
+def _load_existing_answers(gold_path: Path) -> dict[str, dict]:
+    if not gold_path.exists():
         return {}
-    with GOLD_PATH.open(newline="") as f:
+    with gold_path.open(newline="") as f:
         rows = list(csv.DictReader(f))
     return {
         row["case_id"]: {
@@ -288,8 +294,8 @@ def _load_gold_labels() -> list[dict]:
         return list(csv.DictReader(f))
 
 
-def _save(to_label_rows: list[dict], answers: dict[str, dict]) -> None:
-    with GOLD_PATH.open("w", newline="") as f:
+def _save(gold_path: Path, to_label_rows: list[dict], answers: dict[str, dict]) -> None:
+    with gold_path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=COLUMNS)
         writer.writeheader()
         for row in to_label_rows:
@@ -298,23 +304,24 @@ def _save(to_label_rows: list[dict], answers: dict[str, dict]) -> None:
             writer.writerow(out_row)
 
 
-def main() -> None:
-    to_label_rows = _load_to_label()
+def main(to_label_path: Path = TO_LABEL_PATH) -> None:
+    gold_path = _gold_path_for(to_label_path)
+    to_label_rows = _load_to_label(to_label_path)
     by_id = {row["case_id"]: row for row in to_label_rows}
     total = len(to_label_rows)
 
     order = list(by_id.keys())
     Random(SEED).shuffle(order)
 
-    answers = _load_existing_answers()
+    answers = _load_existing_answers(gold_path)
     index = 0
     while index < len(order) and order[index] in answers:
         index += 1
 
     if answers:
-        print(f"Resuming: {len(answers)}/{total} already labelled.")
+        print(f"Resuming ({gold_path}): {len(answers)}/{total} already labelled.")
     else:
-        print(f"Starting: 0/{total} labelled.")
+        print(f"Starting ({gold_path}): 0/{total} labelled.")
 
     try:
         while index < len(order):
@@ -323,7 +330,7 @@ def main() -> None:
 
             verdict = _prompt_verdict()
             if verdict == "q":
-                print(f"\nStopped at {len(answers)}/{total}. Run `python -m gold.label` again to resume.")
+                print(f"\nStopped at {len(answers)}/{total}. Rerun the same command to resume.")
                 return
             if verdict == "b":
                 if index == 0:
@@ -341,11 +348,11 @@ def main() -> None:
                 "my_failure_types": " ".join(failure_types),
                 "my_note": note,
             }
-            _save(to_label_rows, answers)
+            _save(gold_path, to_label_rows, answers)
             print(f"Saved. Progress: {len(answers)}/{total}")
             index += 1
     except (KeyboardInterrupt, EOFError):
-        print(f"\n\nStopped at {len(answers)}/{total}. Run `python -m gold.label` again to resume.")
+        print(f"\n\nStopped at {len(answers)}/{total}. Rerun the same command to resume.")
         return
 
     print(f"\nAll {total} cases labelled.")
@@ -354,5 +361,9 @@ def main() -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--adjudicate", action="store_true", help="resolve verdict disagreements with the judge")
+    parser.add_argument(
+        "--file", type=Path, default=TO_LABEL_PATH,
+        help="to_label CSV to work through (writes to the matching gold_labels_*.csv alongside it)",
+    )
     args = parser.parse_args()
-    run_adjudicate() if args.adjudicate else main()
+    run_adjudicate() if args.adjudicate else main(args.file)

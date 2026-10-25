@@ -155,6 +155,39 @@ empty `Enter` press each time rather than a tool bug.
 
 κ=0.958 is well above the κ≥0.7 target in CLAUDE.md's Metrics section.
 
+## 6. Fresh hold-out (20 cases)
+
+Judge v2 run on `data/gold/gold_labels_fresh.csv` (20 cases, never seen by judge v2's rubric tuning, not
+adjudicated). Neither `gold_labels_fresh.csv` nor `to_label_fresh.csv` was edited.
+
+| | n | raw agreement | Cohen's kappa |
+|---|---|---|---|
+| fresh hold-out labels vs. judge v2 | 20 | **65.0%** | **0.327** |
+
+Substantially lower than the adjudicated set's 0.958 — expected, since the adjudicated set's remaining
+disagreements were exactly what fed judge v2's rubric rulings, while this set is genuinely unseen.
+
+**Confusion matrix (fresh labels × judge v2):**
+
+| | mine = pass | mine = fail |
+|---|---|---|
+| **judge v2 = pass** | 5 | 6 |
+| **judge v2 = fail** | 1 | 8 |
+
+**All 7 disagreements:**
+
+| case_id | my label | judge label | rationale |
+|---|---|---|---|
+| c_0119 | fail [omission] | pass [] | All three weighted reasons (mushroom, Thai, 20-min/45-min window) are explicitly stated, primary included; no unsupported or missing claim is apparent from the payload, so the basis for "omission" here isn't clear from the data alone. |
+| c_0181 | pass [] | fail [non_causal_reason] | "fits your recent favorites" has no `SIMILAR_TO_RATED` reason behind it and doesn't match `rated_highly_names` (lemon angel hair pasta, panini) — judge reads it as an unsupported causal claim from `profile_context`; a generic flourish in the same spirit as ruling 2A's "similar to dishes you've rated highly," but not tied to an actual reason the way 2A's examples are. |
+| c_0107 | fail [non_causal_reason] | pass [] | "a satisfying match for your taste" is tied to the real `LIKED_INGREDIENT=mushroom` reason (the dish's portabella) per judge's claim extraction — a borderline case of allowed flavour description vs. an implied taste-matching claim about the customer. |
+| c_0044 | fail [fabrication] | pass [] | The flagged line — "it isn't tied to your favorite cuisines or ingredients" — is verifiably true against `profile_context` (cuisine_prefs: middle-eastern; liked: mushroom, salmon; recipe is Thai-tagged, bait `cuisine_not_reason`) and explicitly disclaims rather than claims a reason; reads closer to ruling 4A's "non_causal_reason if true" than fabrication. |
+| c_0031 | fail [omission] | pass [] | The primary reason (mushroom, weight 0.5) is stated causally; the secondary `CUISINE_MATCH=mexican` (weight 0.3) appears only as a descriptive fact ("Mexican burrito recipe"), not framed as a reason — may be the intended omission, but CLAUDE.md's Rule 2 defines `omission` as the *primary* reason missing, which it isn't here. |
+| c_0196 | fail [overclaiming] | pass [] | Single reason, `confidence: low`; copy states the one true reason (TIME_FIT) plainly, without "picked just for you" framing. Notably, this is the same phrasing pattern as `c_0174` (TIME_FIT-only, low confidence, "comes together in just N minutes... quick, flavorful weeknight option"), which the third adjudication pass in §5 resolved to `pass` — worth checking for consistency between the two. |
+| c_0082 | fail [misattribution] | pass [] | `LIKED_INGREDIENT=pork` matches the recipe's actual `main_ingredient` (`pork`); no wrong value or wrong code is apparent per ruling 3A's definition of `misattribution`. |
+
 ## Cost
 
 Judge v2, 50 cases: 139,800 input tokens / 28,024 output tokens. **Estimated cost: $0.5598.**
+Judge v2, fresh hold-out (20 cases): 55,872 input tokens / 11,396 output tokens. **Estimated cost: $0.2257.**
+**Running total: $0.7855.**

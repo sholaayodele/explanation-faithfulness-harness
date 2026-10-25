@@ -1,6 +1,6 @@
 # Cost log
 
-Every API run against the ~€5 budget (CLAUDE.md, Models and budget). Updated after every run — append a
+Every API run against the ~€10 budget (CLAUDE.md, Models and budget). Updated after every run — append a
 row, don't edit past ones. Costs computed from each run's own reported tokens at list price: generator
 (`claude-haiku-5-5`) $0.10/1M input, $0.50/1M output; judge (`claude-sonnet-5-5`) $2.00/1M input, $10.00/1M
 output.
@@ -13,6 +13,6 @@ output.
 | 2026-10-25 | 8 | Judge v2, adjudicated gold set | claude-sonnet-5-5 | 50 | 139,800 | 28,024 | $0.5598 |
 | 2026-10-25 | 8 | Judge v2, fresh hold-out | claude-sonnet-5-5 | 20 | 55,872 | 11,396 | $0.2257 |
 
-**Running project total: $4.2360** of the ~€5 budget.
+**Running project total: $4.2360** of the ~€10 budget.
 
 Not yet run / not included: v2 generator guardrails and any full-200-case v2 rerun (step 10).

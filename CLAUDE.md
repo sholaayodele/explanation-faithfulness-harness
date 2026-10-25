@@ -159,6 +159,7 @@ Locked decisions for data prep and the matcher (Shola-approved; changes need sig
 - Total API budget: ~€5. Always run on 10 cases before a full run.
 - Cache every API response to `results/cache/` keyed by (prompt version, case_id); never re-call for a cached result.
 - Log token usage and estimated cost per run.
+- Log every API run to `results/cost_log.md` (date, step, run, model, cases, tokens, cost) with a running project total; append a row after every future run, never edit past ones.
 - API key comes from `.env` via python-dotenv. Never print, log or commit it.
 
 ## Iterations

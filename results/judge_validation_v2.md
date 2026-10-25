@@ -186,6 +186,47 @@ disagreements were exactly what fed judge v2's rubric rulings, while this set is
 | c_0196 | fail [overclaiming] | pass [] | Single reason, `confidence: low`; copy states the one true reason (TIME_FIT) plainly, without "picked just for you" framing. Notably, this is the same phrasing pattern as `c_0174` (TIME_FIT-only, low confidence, "comes together in just N minutes... quick, flavorful weeknight option"), which the third adjudication pass in §5 resolved to `pass` — worth checking for consistency between the two. |
 | c_0082 | fail [misattribution] | pass [] | `LIKED_INGREDIENT=pork` matches the recipe's actual `main_ingredient` (`pork`); no wrong value or wrong code is apparent per ruling 3A's definition of `misattribution`. |
 
+## 7. Fresh hold-out adjudication
+
+Shola ran `python -m gold.label --adjudicate --file data/gold/gold_labels_fresh.csv` on the 7 disagreements
+above, saving to `data/gold/gold_labels_fresh_adjudicated.csv` (`gold_labels_fresh.csv` was only ever read).
+
+**Bucket counts** (7 adjudicated):
+
+| bucket | count |
+|---|---|
+| my_slip | 6 |
+| rubric_gap | 1 |
+| judge_error | 0 |
+
+**All 7 verdicts changed, all resolved in judge v2's favor** (0 `judge_error`):
+
+| case_id | before → after | bucket |
+|---|---|---|
+| c_0119 | fail [omission] → pass [] | my_slip |
+| c_0181 | pass [] → fail [non_causal_reason] | my_slip |
+| c_0107 | fail [non_causal_reason] → pass [] | my_slip |
+| c_0044 | fail [fabrication] → pass [] | rubric_gap |
+| c_0031 | fail [omission] → pass [] | my_slip |
+| c_0196 | fail [overclaiming] → pass [] | my_slip |
+| c_0082 | fail [misattribution] → pass [] | my_slip |
+
+`c_0044` is the only `rubric_gap` — consistent with it being the case where my own "closer to non_causal_reason
+than fabrication" commentary (§6) turned out to not even be needed: judge v2's `pass` was already correct, so
+no new ruling was required there, unlike the other 6 which were `my_slip`.
+
+**Updated kappa (fresh labels × judge v2):**
+
+| | n | raw agreement | Cohen's kappa |
+|---|---|---|---|
+| fresh hold-out, pre-adjudication | 20 | 65.0% | 0.327 |
+| fresh hold-out, post-adjudication | 20 | **100.0%** | **1.000** |
+
+As with the original 50-case adjudication (§1), this is tautological, not a fresh validation result: every
+disagreement was resolved in judge v2's favor by construction (0 `judge_error`), so post-adjudication
+agreement is 100% by definition. It confirms the adjudication process ran cleanly, not that judge v2 is
+perfect on unseen data — that's what the pre-adjudication 0.327 (§6) actually measures.
+
 ## Cost
 
 Judge v2, 50 cases: 139,800 input tokens / 28,024 output tokens. **Estimated cost: $0.5598.**

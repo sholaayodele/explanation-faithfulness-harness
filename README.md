@@ -99,6 +99,7 @@ Payload: `CUISINE_MATCH: thai (0.5)`, `TIME_FIT: 25 ≤ 30 min (0.3)`, confidenc
 - Rule-based matcher stands in for a real ranker; the explanation layer is the subject, not the ranking.
 - Single-annotator gold labels; [N] cases.
 - English copy only.
+- TIME_FIT appears in ~62% of payloads because 26/50 profiles have a ≤30-min limit; medium confidence is ~10% of cases (19), enough for directional reads only.
 
 ---
 

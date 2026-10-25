@@ -6,16 +6,38 @@
     "cuisine": "italian",
     "minutes": null,
     "main_ingredient": null,
-    "ingredients": ["pasta", "tomato sauce"],
-    "key_ingredients": ["pasta"],
+    "ingredients": [
+      "pasta",
+      "tomato sauce"
+    ],
+    "key_ingredients": [
+      "pasta"
+    ],
     "diet_tags": [],
     "other_tags": []
   },
   "reasons": [
-    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "italian", "weight": 0.5}
+    {
+      "code": "CUISINE_MATCH",
+      "field": "cuisine_prefs",
+      "value": "italian",
+      "weight": 0.5
+    }
   ],
   "confidence": "medium",
   "fallback": null,
   "excluded_by": [],
-  "case_type": "missing_fields"
+  "case_type": "missing_fields",
+  "profile_context": {
+    "cuisine_prefs": [
+      "italian"
+    ],
+    "diet": [],
+    "liked_ingredients": [],
+    "exclusions": [],
+    "max_cook_minutes": 45,
+    "rated_highly_names": [
+      "pasta primavera"
+    ]
+  }
 }

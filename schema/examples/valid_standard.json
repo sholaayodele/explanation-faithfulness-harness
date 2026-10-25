@@ -7,18 +7,67 @@
     "cuisine": "mexican",
     "minutes": 55,
     "main_ingredient": null,
-    "ingredients": ["winter squash", "mexican seasoning", "mixed spice", "honey", "butter", "olive oil", "salt"],
-    "key_ingredients": ["winter squash", "mexican seasoning"],
-    "diet_tags": ["vegetarian"],
-    "other_tags": ["low-calorie"]
+    "ingredients": [
+      "winter squash",
+      "mexican seasoning",
+      "mixed spice",
+      "honey",
+      "butter",
+      "olive oil",
+      "salt"
+    ],
+    "key_ingredients": [
+      "winter squash",
+      "mexican seasoning"
+    ],
+    "diet_tags": [
+      "vegetarian"
+    ],
+    "other_tags": [
+      "low-calorie"
+    ]
   },
   "reasons": [
-    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "mexican", "weight": 0.5},
-    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 60, "recipe_minutes": 55, "weight": 0.3},
-    {"code": "DIET_COMPLIANT", "field": "diet_prefs", "value": "vegetarian", "weight": 0.2}
+    {
+      "code": "CUISINE_MATCH",
+      "field": "cuisine_prefs",
+      "value": "mexican",
+      "weight": 0.5
+    },
+    {
+      "code": "TIME_FIT",
+      "field": "max_cook_minutes",
+      "value": 60,
+      "recipe_minutes": 55,
+      "weight": 0.3
+    },
+    {
+      "code": "DIET_COMPLIANT",
+      "field": "diet_prefs",
+      "value": "vegetarian",
+      "weight": 0.2
+    }
   ],
   "confidence": "high",
   "fallback": null,
-  "excluded_by": ["no_pork"],
-  "case_type": "standard"
+  "excluded_by": [
+    "no_pork"
+  ],
+  "case_type": "standard",
+  "profile_context": {
+    "cuisine_prefs": [
+      "mexican"
+    ],
+    "diet": [
+      "vegetarian"
+    ],
+    "liked_ingredients": [],
+    "exclusions": [
+      "no_pork"
+    ],
+    "max_cook_minutes": 60,
+    "rated_highly_names": [
+      "veggie taco bowl"
+    ]
+  }
 }

@@ -7,16 +7,46 @@
     "cuisine": null,
     "minutes": 20,
     "main_ingredient": "beef",
-    "ingredients": ["ground beef", "hamburger buns", "lettuce", "tomato", "cheese"],
-    "key_ingredients": ["ground beef", "hamburger buns"],
+    "ingredients": [
+      "ground beef",
+      "hamburger buns",
+      "lettuce",
+      "tomato",
+      "cheese"
+    ],
+    "key_ingredients": [
+      "ground beef",
+      "hamburger buns"
+    ],
     "diet_tags": [],
     "other_tags": []
   },
   "reasons": [
-    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "beef", "weight": 0.5}
+    {
+      "code": "LIKED_INGREDIENT",
+      "field": "liked_ingredients",
+      "value": "beef",
+      "weight": 0.5
+    }
   ],
   "confidence": "high",
   "fallback": null,
-  "excluded_by": ["no_pork"],
-  "case_type": "standard"
+  "excluded_by": [
+    "no_pork"
+  ],
+  "case_type": "standard",
+  "profile_context": {
+    "cuisine_prefs": [],
+    "diet": [],
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [
+      "no_pork"
+    ],
+    "max_cook_minutes": 20,
+    "rated_highly_names": [
+      "bbq beef sliders"
+    ]
+  }
 }

@@ -7,17 +7,58 @@
     "cuisine": "chinese",
     "minutes": 20,
     "main_ingredient": null,
-    "ingredients": ["noodles", "soy sauce", "scallion", "sesame oil", "chili flakes"],
-    "key_ingredients": ["noodles", "sesame oil"],
-    "diet_tags": ["vegetarian"],
+    "ingredients": [
+      "noodles",
+      "soy sauce",
+      "scallion",
+      "sesame oil",
+      "chili flakes"
+    ],
+    "key_ingredients": [
+      "noodles",
+      "sesame oil"
+    ],
+    "diet_tags": [
+      "vegetarian"
+    ],
     "other_tags": []
   },
   "reasons": [
-    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "chinese", "weight": 0.5},
-    {"code": "DIET_COMPLIANT", "field": "diet_prefs", "value": "vegetarian", "weight": 0.3}
+    {
+      "code": "CUISINE_MATCH",
+      "field": "cuisine_prefs",
+      "value": "chinese",
+      "weight": 0.5
+    },
+    {
+      "code": "DIET_COMPLIANT",
+      "field": "diet_prefs",
+      "value": "vegetarian",
+      "weight": 0.3
+    }
   ],
   "confidence": "medium",
   "fallback": null,
-  "excluded_by": ["no_peanut"],
-  "case_type": "conflicting_signals"
+  "excluded_by": [
+    "no_peanut"
+  ],
+  "case_type": "conflicting_signals",
+  "profile_context": {
+    "cuisine_prefs": [
+      "chinese"
+    ],
+    "diet": [
+      "vegetarian"
+    ],
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [
+      "no_peanut"
+    ],
+    "max_cook_minutes": 20,
+    "rated_highly_names": [
+      "korean bbq short ribs"
+    ]
+  }
 }

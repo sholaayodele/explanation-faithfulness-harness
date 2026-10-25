@@ -7,17 +7,49 @@
     "cuisine": "chinese",
     "minutes": 20,
     "main_ingredient": "chicken",
-    "ingredients": ["chicken", "soy sauce", "broccoli", "garlic"],
-    "key_ingredients": ["chicken", "broccoli"],
+    "ingredients": [
+      "chicken",
+      "soy sauce",
+      "broccoli",
+      "garlic"
+    ],
+    "key_ingredients": [
+      "chicken",
+      "broccoli"
+    ],
     "diet_tags": [],
     "other_tags": []
   },
   "reasons": [
-    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "chinese", "weight": 0.5},
-    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "beef", "weight": 0.3}
+    {
+      "code": "CUISINE_MATCH",
+      "field": "cuisine_prefs",
+      "value": "chinese",
+      "weight": 0.5
+    },
+    {
+      "code": "LIKED_INGREDIENT",
+      "field": "liked_ingredients",
+      "value": "beef",
+      "weight": 0.3
+    }
   ],
   "confidence": "medium",
   "fallback": null,
   "excluded_by": [],
-  "case_type": "standard"
+  "case_type": "standard",
+  "profile_context": {
+    "cuisine_prefs": [
+      "chinese"
+    ],
+    "diet": [],
+    "liked_ingredients": [
+      "beef"
+    ],
+    "exclusions": [],
+    "max_cook_minutes": 30,
+    "rated_highly_names": [
+      "beef and broccoli"
+    ]
+  }
 }

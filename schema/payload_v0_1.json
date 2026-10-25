@@ -12,7 +12,8 @@
     "confidence",
     "fallback",
     "excluded_by",
-    "case_type"
+    "case_type",
+    "profile_context"
   ],
   "properties": {
     "schema_version": { "const": "0.1" },
@@ -117,6 +118,41 @@
         "standard", "sparse_profile", "fallback",
         "low_confidence", "conflicting_signals", "missing_fields"
       ]
+    },
+    "profile_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cuisine_prefs", "diet", "liked_ingredients", "exclusions", "max_cook_minutes", "rated_highly_names"],
+      "properties": {
+        "cuisine_prefs": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "italian", "mexican", "indian", "chinese", "thai",
+              "greek", "french", "middle-eastern", "cajun", "caribbean"
+            ]
+          }
+        },
+        "diet": {
+          "type": "array",
+          "items": { "enum": ["vegetarian", "vegan", "gluten-free"] }
+        },
+        "liked_ingredients": {
+          "type": "array",
+          "items": { "enum": ["chicken", "beef", "pork", "shrimp", "salmon", "mushroom"] }
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "enum": ["no_pork", "no_beef", "no_shellfish", "no_peanut", "no_mushroom", "no_cilantro"]
+          }
+        },
+        "max_cook_minutes": { "enum": [20, 30, 45, 60] },
+        "rated_highly_names": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
     }
   }
 }

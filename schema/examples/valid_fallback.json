@@ -7,16 +7,38 @@
     "cuisine": "italian",
     "minutes": 90,
     "main_ingredient": "beef",
-    "ingredients": ["ground beef", "lasagna noodles", "tomato sauce", "mozzarella", "ricotta"],
-    "key_ingredients": ["beef", "lasagna noodles"],
+    "ingredients": [
+      "ground beef",
+      "lasagna noodles",
+      "tomato sauce",
+      "mozzarella",
+      "ricotta"
+    ],
+    "key_ingredients": [
+      "beef",
+      "lasagna noodles"
+    ],
     "diet_tags": [],
     "other_tags": []
   },
   "reasons": [
-    {"code": "POPULAR_FALLBACK", "field": "popularity", "value": 4.6, "weight": 1.0}
+    {
+      "code": "POPULAR_FALLBACK",
+      "field": "popularity",
+      "value": 4.6,
+      "weight": 1.0
+    }
   ],
   "confidence": "low",
   "fallback": "POPULAR_FALLBACK",
   "excluded_by": [],
-  "case_type": "fallback"
+  "case_type": "fallback",
+  "profile_context": {
+    "cuisine_prefs": [],
+    "diet": [],
+    "liked_ingredients": [],
+    "exclusions": [],
+    "max_cook_minutes": 60,
+    "rated_highly_names": []
+  }
 }

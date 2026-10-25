@@ -7,17 +7,51 @@
     "cuisine": null,
     "minutes": null,
     "main_ingredient": "mushroom",
-    "ingredients": ["mushroom", "rice", "soy sauce", "scallion"],
-    "key_ingredients": ["mushroom", "rice"],
-    "diet_tags": ["vegetarian"],
+    "ingredients": [
+      "mushroom",
+      "rice",
+      "soy sauce",
+      "scallion"
+    ],
+    "key_ingredients": [
+      "mushroom",
+      "rice"
+    ],
+    "diet_tags": [
+      "vegetarian"
+    ],
     "other_tags": []
   },
   "reasons": [
-    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "mushroom", "weight": 0.5},
-    {"code": "DIET_COMPLIANT", "field": "diet_prefs", "value": "vegetarian", "weight": 0.3}
+    {
+      "code": "LIKED_INGREDIENT",
+      "field": "liked_ingredients",
+      "value": "mushroom",
+      "weight": 0.5
+    },
+    {
+      "code": "DIET_COMPLIANT",
+      "field": "diet_prefs",
+      "value": "vegetarian",
+      "weight": 0.3
+    }
   ],
   "confidence": "medium",
   "fallback": null,
   "excluded_by": [],
-  "case_type": "missing_fields"
+  "case_type": "missing_fields",
+  "profile_context": {
+    "cuisine_prefs": [],
+    "diet": [
+      "vegetarian"
+    ],
+    "liked_ingredients": [
+      "mushroom"
+    ],
+    "exclusions": [],
+    "max_cook_minutes": 45,
+    "rated_highly_names": [
+      "veggie fried rice"
+    ]
+  }
 }

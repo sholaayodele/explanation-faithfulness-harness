@@ -7,18 +7,57 @@
     "cuisine": "thai",
     "minutes": 25,
     "main_ingredient": "chicken",
-    "ingredients": ["chicken breast", "thai basil", "fish sauce", "garlic", "chili"],
-    "key_ingredients": ["chicken", "thai basil"],
+    "ingredients": [
+      "chicken breast",
+      "thai basil",
+      "fish sauce",
+      "garlic",
+      "chili"
+    ],
+    "key_ingredients": [
+      "chicken",
+      "thai basil"
+    ],
     "diet_tags": [],
     "other_tags": []
   },
   "reasons": [
-    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "thai", "weight": 0.45},
-    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "chicken", "weight": 0.35},
-    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 30, "recipe_minutes": 25, "weight": 0.2}
+    {
+      "code": "CUISINE_MATCH",
+      "field": "cuisine_prefs",
+      "value": "thai",
+      "weight": 0.45
+    },
+    {
+      "code": "LIKED_INGREDIENT",
+      "field": "liked_ingredients",
+      "value": "chicken",
+      "weight": 0.35
+    },
+    {
+      "code": "TIME_FIT",
+      "field": "max_cook_minutes",
+      "value": 30,
+      "recipe_minutes": 25,
+      "weight": 0.2
+    }
   ],
   "confidence": "high",
   "fallback": null,
   "excluded_by": [],
-  "case_type": "standard"
+  "case_type": "standard",
+  "profile_context": {
+    "cuisine_prefs": [
+      "thai"
+    ],
+    "diet": [],
+    "liked_ingredients": [
+      "chicken"
+    ],
+    "exclusions": [],
+    "max_cook_minutes": 30,
+    "rated_highly_names": [
+      "pad thai noodles"
+    ]
+  }
 }

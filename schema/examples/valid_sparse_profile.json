@@ -7,17 +7,52 @@
     "cuisine": "greek",
     "minutes": 15,
     "main_ingredient": null,
-    "ingredients": ["cucumber", "tomato", "feta", "olives", "olive oil"],
-    "key_ingredients": ["cucumber", "feta"],
-    "diet_tags": ["vegetarian", "gluten-free"],
-    "other_tags": ["low-calorie"]
+    "ingredients": [
+      "cucumber",
+      "tomato",
+      "feta",
+      "olives",
+      "olive oil"
+    ],
+    "key_ingredients": [
+      "cucumber",
+      "feta"
+    ],
+    "diet_tags": [
+      "vegetarian",
+      "gluten-free"
+    ],
+    "other_tags": [
+      "low-calorie"
+    ]
   },
   "reasons": [
-    {"code": "NEW_TO_YOU", "field": "cuisine_history", "value": "greek", "weight": 0.6},
-    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 20, "recipe_minutes": 15, "weight": 0.4}
+    {
+      "code": "NEW_TO_YOU",
+      "field": "cuisine_history",
+      "value": "greek",
+      "weight": 0.6
+    },
+    {
+      "code": "TIME_FIT",
+      "field": "max_cook_minutes",
+      "value": 20,
+      "recipe_minutes": 15,
+      "weight": 0.4
+    }
   ],
   "confidence": "medium",
   "fallback": null,
   "excluded_by": [],
-  "case_type": "sparse_profile"
+  "case_type": "sparse_profile",
+  "profile_context": {
+    "cuisine_prefs": [],
+    "diet": [],
+    "liked_ingredients": [],
+    "exclusions": [],
+    "max_cook_minutes": 20,
+    "rated_highly_names": [
+      "mediterranean mezze plate"
+    ]
+  }
 }

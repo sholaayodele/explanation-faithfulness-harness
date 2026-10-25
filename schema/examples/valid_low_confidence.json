@@ -7,17 +7,54 @@
     "cuisine": "mexican",
     "minutes": 35,
     "main_ingredient": "shrimp",
-    "ingredients": ["shrimp", "corn tortillas", "cabbage", "lime", "chili powder"],
-    "key_ingredients": ["shrimp", "corn tortillas"],
+    "ingredients": [
+      "shrimp",
+      "corn tortillas",
+      "cabbage",
+      "lime",
+      "chili powder"
+    ],
+    "key_ingredients": [
+      "shrimp",
+      "corn tortillas"
+    ],
     "diet_tags": [],
     "other_tags": []
   },
   "reasons": [
-    {"code": "CUISINE_MATCH", "field": "cuisine_prefs", "value": "mexican", "weight": 0.4},
-    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "shrimp", "weight": 0.3}
+    {
+      "code": "CUISINE_MATCH",
+      "field": "cuisine_prefs",
+      "value": "mexican",
+      "weight": 0.4
+    },
+    {
+      "code": "LIKED_INGREDIENT",
+      "field": "liked_ingredients",
+      "value": "shrimp",
+      "weight": 0.3
+    }
   ],
   "confidence": "low",
   "fallback": null,
-  "excluded_by": ["no_peanut"],
-  "case_type": "low_confidence"
+  "excluded_by": [
+    "no_peanut"
+  ],
+  "case_type": "low_confidence",
+  "profile_context": {
+    "cuisine_prefs": [
+      "mexican"
+    ],
+    "diet": [],
+    "liked_ingredients": [
+      "shrimp"
+    ],
+    "exclusions": [
+      "no_peanut"
+    ],
+    "max_cook_minutes": 45,
+    "rated_highly_names": [
+      "shrimp ceviche"
+    ]
+  }
 }

@@ -7,17 +7,50 @@
     "cuisine": "chinese",
     "minutes": null,
     "main_ingredient": "chicken",
-    "ingredients": ["chicken", "soy sauce", "broccoli", "garlic"],
-    "key_ingredients": ["chicken", "broccoli"],
+    "ingredients": [
+      "chicken",
+      "soy sauce",
+      "broccoli",
+      "garlic"
+    ],
+    "key_ingredients": [
+      "chicken",
+      "broccoli"
+    ],
     "diet_tags": [],
     "other_tags": []
   },
   "reasons": [
-    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "chicken", "weight": 0.5},
-    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 30, "recipe_minutes": 25, "weight": 0.3}
+    {
+      "code": "LIKED_INGREDIENT",
+      "field": "liked_ingredients",
+      "value": "chicken",
+      "weight": 0.5
+    },
+    {
+      "code": "TIME_FIT",
+      "field": "max_cook_minutes",
+      "value": 30,
+      "recipe_minutes": 25,
+      "weight": 0.3
+    }
   ],
   "confidence": "medium",
   "fallback": null,
   "excluded_by": [],
-  "case_type": "missing_fields"
+  "case_type": "missing_fields",
+  "profile_context": {
+    "cuisine_prefs": [
+      "chinese"
+    ],
+    "diet": [],
+    "liked_ingredients": [
+      "chicken"
+    ],
+    "exclusions": [],
+    "max_cook_minutes": 45,
+    "rated_highly_names": [
+      "kung pao chicken"
+    ]
+  }
 }

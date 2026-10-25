@@ -7,17 +7,47 @@
     "cuisine": null,
     "minutes": 40,
     "main_ingredient": "salmon",
-    "ingredients": ["salmon", "lemon", "dill", "olive oil"],
-    "key_ingredients": ["salmon"],
+    "ingredients": [
+      "salmon",
+      "lemon",
+      "dill",
+      "olive oil"
+    ],
+    "key_ingredients": [
+      "salmon"
+    ],
     "diet_tags": [],
     "other_tags": []
   },
   "reasons": [
-    {"code": "LIKED_INGREDIENT", "field": "liked_ingredients", "value": "salmon", "weight": 0.5},
-    {"code": "TIME_FIT", "field": "max_cook_minutes", "value": 30, "recipe_minutes": 40, "weight": 0.3}
+    {
+      "code": "LIKED_INGREDIENT",
+      "field": "liked_ingredients",
+      "value": "salmon",
+      "weight": 0.5
+    },
+    {
+      "code": "TIME_FIT",
+      "field": "max_cook_minutes",
+      "value": 30,
+      "recipe_minutes": 40,
+      "weight": 0.3
+    }
   ],
   "confidence": "medium",
   "fallback": null,
   "excluded_by": [],
-  "case_type": "standard"
+  "case_type": "standard",
+  "profile_context": {
+    "cuisine_prefs": [],
+    "diet": [],
+    "liked_ingredients": [
+      "salmon"
+    ],
+    "exclusions": [],
+    "max_cook_minutes": 30,
+    "rated_highly_names": [
+      "grilled salmon salad"
+    ]
+  }
 }

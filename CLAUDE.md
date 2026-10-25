@@ -24,6 +24,8 @@ Given a structured explanation payload, the model writes a short customer-facing
 
 **Out of scope:** recommendation quality, persuasiveness/delight, general writing quality beyond length. No UI. No real customer data. No fine-tuning.
 
+**`profile_context` is context only.** Presenting anything from it as a reason the meal was picked, when it isn't in `reasons`, is fabrication.
+
 ## Payload schema (v0.1 — locked, see Data decisions)
 ```json
 {
@@ -47,7 +49,15 @@ Given a structured explanation payload, the model writes a short customer-facing
   "confidence": "high",
   "fallback": null,
   "excluded_by": ["no_pork"],
-  "case_type": "standard"
+  "case_type": "standard",
+  "profile_context": {
+    "cuisine_prefs": ["thai"],
+    "diet": [],
+    "liked_ingredients": ["chicken"],
+    "exclusions": ["no_pork"],
+    "max_cook_minutes": 30,
+    "rated_highly_names": ["pad thai noodles"]
+  }
 }
 ```
 **Reason codes:** `CUISINE_MATCH`, `TIME_FIT`, `DIET_COMPLIANT`, `LIKED_INGREDIENT`, `SIMILAR_TO_RATED`, `NEW_TO_YOU`, `POPULAR_FALLBACK`.
@@ -60,6 +70,7 @@ Given a structured explanation payload, the model writes a short customer-facing
 - `confidence`: `high | medium | low`
 - `fallback`: `null | "POPULAR_FALLBACK"` (no personal signal)
 - `case_type`: `standard | sparse_profile | fallback | low_confidence | conflicting_signals | missing_fields`
+- `profile_context`: `{cuisine_prefs, diet, liked_ingredients, exclusions, max_cook_minutes, rated_highly_names}`, copied verbatim from the profile — **including any contradictions** it has with `diet`/`exclusions` (e.g. a vegetarian profile whose `liked_ingredients` says `salmon`, or whose `rated_highly_names` includes a non-compliant dish). It exists so the generator sees the full customer picture, but it is context only, never a source of claims — see "The task under test" above.
 
 **Validation rules** (structural contract in `schema/payload_v0_1.json`, enforced by `schema/validator.py`):
 - Reason weights are strictly decreasing — no ties, so there is exactly one primary reason.
@@ -68,6 +79,7 @@ Given a structured explanation payload, the model writes a short customer-facing
 - `fallback == "POPULAR_FALLBACK"` ⇔ `case_type == "fallback"`; a fallback payload's `reasons` contains only the `POPULAR_FALLBACK` reason; `POPULAR_FALLBACK` never appears without `fallback` set.
 - `case_type == "low_confidence"` ⇒ `confidence == "low"`.
 - Only `recipe.minutes` and `recipe.cuisine` may be absent/null when `case_type == "missing_fields"`; everywhere else `recipe.minutes` is required.
+- `profile_context` is structurally required (every sub-field present), but not cross-checked against `reasons` by the validator — that's the judge's job (Rule 1, Grounded).
 
 ## Data
 - Source: Kaggle "Food.com Recipes and Interactions", file `RAW_recipes.csv` → `data/raw/` (gitignored).
@@ -99,6 +111,21 @@ Locked decisions for data prep and the matcher (Shola-approved; changes need sig
 - **SIMILAR_TO_RATED:** same cuisine **and** same main protein as a recipe the profile rated highly.
 - **Health tags** (`low-calorie`, `low-carb`, `low-sodium`, `low-cholesterol`, `healthy`): never used as reasons (no health/weight inferences), but kept in the recipe data passed to the generator.
 - **Conflict rule:** diet and exclusions always override preferences and history. The matcher never uses a contradicted signal as a reason (no `LIKED_INGREDIENT` or `SIMILAR_TO_RATED` that conflicts with diet or exclusions).
+
+## Matcher (`matcher/run.py` → `data/processed/eval_set.jsonl`)
+- **Case mix:** ~200 payloads — 140 `standard`, and 60 stress split ~evenly across `sparse_profile`, `fallback`, `low_confidence`, `conflicting_signals`, `missing_fields`.
+- **Reason priority order** (used both to pick which ≤3 reasons survive and to rank them): `LIKED_INGREDIENT > CUISINE_MATCH > DIET_COMPLIANT > SIMILAR_TO_RATED > NEW_TO_YOU > TIME_FIT`. "Strong" = the first three; "weak" = the last three.
+- **`NEW_TO_YOU`:** recipe's cuisine is non-null, **not** in `cuisine_prefs`, and not among the cuisines of any `rated_highly` recipe. It never co-occurs with `CUISINE_MATCH` (mutually exclusive by definition).
+- **`TIME_FIT` is only a candidate reason when `profile.max_cook_minutes ≤ 30`, or `recipe.minutes ≤ 50%` of `max_cook_minutes`.** It is never added just to fill a slot — payloads can have as few as 1 reason. (Reasons-per-payload distribution from the last run: 1 → 54, 2 → 33, 3 → 113.)
+- **Weights by reason count:** 1 reason → `1.0`; 2 → `0.6 / 0.4`; 3 → `0.5 / 0.3 / 0.2`. No special low weight for a lone reason — `confidence`, not weight, carries weakness.
+- **Confidence:** `high` = strong primary (`LIKED_INGREDIENT`/`CUISINE_MATCH`/`DIET_COMPLIANT`) plus a second reason that is itself strong or `SIMILAR_TO_RATED`. `medium` = a strong primary with only `TIME_FIT`/`NEW_TO_YOU` as support (or no support at all), or a weak primary with any support. `low` = a single weak reason, or `case_type == "fallback"`.
+- **Minimum counts:** at least 20 `SIMILAR_TO_RATED` and 15 `NEW_TO_YOU` reasons across the eval set (reached by selecting qualifying candidate recipes for a few cases — detection logic itself never changes).
+- **Fallback:** only the 3 cold-start profiles (empty `rated_highly`, no stated preferences) get `POPULAR_FALLBACK`, drawn only from the `is_popular` pool.
+- **Conflict enforcement:** candidates are always drawn from the diet/exclusion-compatible pool, so a contradicted `LIKED_INGREDIENT` structurally can never match; `SIMILAR_TO_RATED` only compares against the diet/exclusion-compliant subset of `rated_highly`. A post-hoc assertion checks no emitted reason's value contradicts `profile.diet`/`profile.exclusions`.
+- **`missing_fields`:** pick a match with ≥2 real reasons, null `recipe.minutes` **or** `recipe.cuisine` in the payload only (never in `recipes_clean.csv`), and drop whichever reason(s) reference that field (`TIME_FIT` for minutes; `CUISINE_MATCH`/`NEW_TO_YOU` for cuisine) before re-ranking the survivors.
+- **Bait quotas:** ≥25% of the 200 cases use a recipe with non-empty `other_tags`; ≥10% use a recipe with a non-null `cuisine` that no reason references (excluding `NEW_TO_YOU` cases, since those do reference the cuisine).
+- **Recipe reuse cap:** no recipe id is used more than twice across the whole eval set.
+- **`bait` list:** each `eval_set.jsonl` row carries a `bait` array *outside* the payload — any of `health_tags`, `cuisine_not_reason`, `contradicted_like`, `contradicted_history` — flagging which temptations-to-fabricate that case carries, for later analysis.
 
 ## Metrics
 - Faithfulness rate (all claims supported)
@@ -156,7 +183,7 @@ notebooks/         # exploration only
 - [x] 2. Schema + validator
 - [x] 3. Data prep on RAW_recipes.csv
 - [x] 4. Synthetic profiles
-- [ ] 5. Matcher + 200-case eval set
+- [x] 5. Matcher + 200-case eval set
 - [ ] 6. v1 generator (10 cases, then 200)
 - [ ] 7. Rule checks + LLM judge
 - [ ] 8. Gold labels (Shola, ~50 cases) + kappa

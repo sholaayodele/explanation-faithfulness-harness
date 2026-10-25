@@ -224,40 +224,52 @@ def _save_adjudicated(gold_rows: list[dict], adjudications: dict[str, dict]) -> 
             writer.writerow(out_row)
 
 
-def run_adjudicate() -> None:
+def run_adjudicate(cases: list[str] | None = None) -> None:
+    """Walk the 18 verdict disagreements. With `cases`, only re-prompts that
+    specific subset (e.g. a second pass) - every other case's prior
+    adjudication is kept exactly as it is in gold_labels_adjudicated.csv."""
     gold_rows = _load_gold_labels()
     gold_by_id = {row["case_id"]: row for row in gold_rows}
     judgments = _load_judgments()
     payloads = _load_eval_payloads()
 
-    disagreement_ids = [
+    all_disagreement_ids = [
         row["case_id"] for row in gold_rows
         if row["my_verdict"].strip().lower() != judgments[row["case_id"]]["verdict"]
     ]
-    total = len(disagreement_ids)
-
     existing = _load_existing_adjudications()
-    adjudications = {cid: existing[cid] for cid in existing if cid in disagreement_ids}
 
-    if adjudications:
-        print(f"Resuming adjudication: {len(adjudications)}/{total} already resolved.")
+    if cases:
+        unknown = [c for c in cases if c not in all_disagreement_ids]
+        if unknown:
+            print(f"Note: {unknown} weren't in the original 18 verdict disagreements - including anyway.")
+        disagreement_ids = cases
+        adjudications = dict(existing)  # keep every other case's prior adjudication intact
+        for cid in cases:
+            adjudications.pop(cid, None)  # force re-prompting just these cases
     else:
-        print(f"Starting adjudication: 0/{total} disagreements to resolve.")
+        disagreement_ids = all_disagreement_ids
+        adjudications = {cid: existing[cid] for cid in existing if cid in disagreement_ids}
+
+    total = len(disagreement_ids)
 
     index = 0
     while index < total and disagreement_ids[index] in adjudications:
         index += 1
 
+    if index:
+        print(f"Resuming adjudication: {index}/{total} already resolved.")
+    else:
+        print(f"Starting adjudication: 0/{total} disagreements to resolve.")
+
     try:
         while index < total:
             case_id = disagreement_ids[index]
-            _display_adjudication_case(
-                gold_by_id[case_id], judgments[case_id], payloads[case_id], len(adjudications) + 1, total
-            )
+            _display_adjudication_case(gold_by_id[case_id], judgments[case_id], payloads[case_id], index + 1, total)
 
             verdict = _prompt_verdict()
             if verdict == "q":
-                print(f"\nStopped at {len(adjudications)}/{total}. Run `python -m gold.label --adjudicate` again to resume.")
+                print(f"\nStopped at {index}/{total}. Rerun the same command to resume.")
                 return
             if verdict == "b":
                 if index == 0:
@@ -280,10 +292,10 @@ def run_adjudicate() -> None:
                 "change_reason": change_reason,
             }
             _save_adjudicated(gold_rows, adjudications)
-            print(f"Saved. Progress: {len(adjudications)}/{total}")
             index += 1
+            print(f"Saved. Progress: {index}/{total}")
     except (KeyboardInterrupt, EOFError):
-        print(f"\n\nStopped at {len(adjudications)}/{total}. Run `python -m gold.label --adjudicate` again to resume.")
+        print(f"\n\nStopped at {index}/{total}. Rerun the same command to resume.")
         return
 
     print(f"\nAll {total} disagreements adjudicated.")
@@ -362,8 +374,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--adjudicate", action="store_true", help="resolve verdict disagreements with the judge")
     parser.add_argument(
+        "--cases", default=None,
+        help="with --adjudicate: comma-separated case_ids to re-prompt only (e.g. a second pass); "
+             "every other case's prior adjudication is left exactly as it is",
+    )
+    parser.add_argument(
         "--file", type=Path, default=TO_LABEL_PATH,
         help="to_label CSV to work through (writes to the matching gold_labels_*.csv alongside it)",
     )
     args = parser.parse_args()
-    run_adjudicate() if args.adjudicate else main(args.file)
+    run_adjudicate(args.cases.split(",") if args.cases else None) if args.adjudicate else main(args.file)

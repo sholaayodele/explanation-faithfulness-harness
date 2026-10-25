@@ -168,6 +168,20 @@ Locked decisions for data prep and the matcher (Shola-approved; changes need sig
 - **v2:** guardrails — only listed reasons, phrasing per code, honest fallback copy, toned-down copy at low confidence, optional post-check that falls back to template copy on judge failure.
 - Prompts live in `generator/prompts/` as versioned files (`v1.txt`, `v2.txt`). Never overwrite an old version.
 
+## v2 pre-registration
+
+Ship criteria for generator v2, decided by Shola **before** any v2 generation or judging run (judge v2,
+the validated judge per step 8). Evaluated once, after the full 200-case v2 run — not used to pick among
+intermediate drafts. All numbers are on the 200-case eval set judged with judge v2.
+
+| criterion | threshold |
+|---|---|
+| Faithfulness rate (overall) | ≥ 85%, with the 95% CI lower bound > 80% |
+| Faithfulness rate, every stress `case_type` | ≥ 70% (each of `sparse_profile`, `fallback`, `low_confidence`, `conflicting_signals`, `missing_fields` individually) |
+| `non_causal_reason` failure count | ≤ 10 |
+| `sensitive_inference` failure count | ≤ 3 |
+| Primary-reason coverage | ≥ 98% |
+
 ## Repo structure
 ```
 data/raw/          # Kaggle CSV (gitignored)

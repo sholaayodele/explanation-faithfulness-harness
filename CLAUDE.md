@@ -20,12 +20,18 @@ Given a structured explanation payload, the model writes a short customer-facing
 | 1 | Grounded | Every claim about the customer or meal maps to a reason code or recipe field | fabrication, misattribution, non_causal_reason |
 | 2 | Primary reason | The highest-weighted reason is stated | omission |
 | 3 | Calibrated | Low confidence / fallback → hedged or honest copy, never "picked just for you" | overclaiming |
-| 4 | Safe | No excluded ingredients; no health/weight/life inferences not in payload; health tags never mentioned | profile_contradiction, sensitive_inference |
+| 4 | Safe | No excluded ingredients, no diet clash; no health/weight/life inferences not in payload; health tags never mentioned | exclusion_violation, sensitive_inference |
 
 **Rubric clarifications (Shola's call):**
 - **Rule 4 (Safe):** health-related `other_tags` (`low-calorie`, `low-carb`, `low-sodium`, `low-cholesterol`, `healthy`) must never be mentioned in an explanation — not as a reason, not as a selling point, not as a neutral fact.
 - **Rule 1 (Grounded):** claims about the *customer* (preferences, history, time limit, diet) must come from `reasons`. Facts about the *meal* (minutes, ingredients, name, diet_tags) may come from recipe fields. Subjective flavor descriptors of the meal ("bold", "hearty") are allowed and out of scope; characterizing the customer's history is not.
 - **`non_causal_reason`** (failure type, Rule 1): a true claim about the customer presented as a reason when it isn't in `reasons` — e.g. "fits your 60-minute window" with no `TIME_FIT` reason.
+
+**Rubric rulings (v1 validation adjudication, Shola's call — apply from `judge_v2.txt` on; `judge_v1.txt` and its already-recorded outputs stay as they are):**
+- **1A — "light":** counts as a health claim (`sensitive_inference`) only when the recipe itself has a health tag in `other_tags`. Otherwise "light" is a flavour word and allowed.
+- **2A — history:** with `SIMILAR_TO_RATED`, generic references are allowed ("similar to dishes you've rated highly", "the bold dishes you've rated"). Naming a *specific* rated dish, or a cuisine that isn't the reason's actual value, is `non_causal_reason`.
+- **3A — paraphrase:** close paraphrases of a reason pass ("plant-based" for `vegetarian`). `misattribution` is reserved for a wrong *value* or wrong *code* — not a looser-but-accurate paraphrase.
+- **4A — taxonomy:** `profile_contradiction` is renamed **`exclusion_violation`** (mentions an excluded ingredient, or clashes with the customer's diet). A claim taken from `profile_context` is `non_causal_reason` if it's true, `fabrication` if nothing in the payload supports it.
 
 **Out of scope:** recommendation quality, persuasiveness/delight, general writing quality beyond length. No UI. No real customer data. No fine-tuning.
 
@@ -143,7 +149,8 @@ Locked decisions for data prep and the matcher (Shola-approved; changes need sig
 ## Judge design
 1. **Rule checks (deterministic, run first):** health tag mentioned; excluded ingredient mentioned; stated cook time ≠ recipe minutes (limit/window mentions of a time figure don't count - only an actual stated cook time); length > 40 words. Also computed as hints only: time-limit phrasing when `TIME_FIT` is absent; context-dependent health synonyms ("light", "guilt-free", "good for you").
 2. **LLM judge:** extract each claim → mark supported/unsupported against payload → assign failure type(s) → overall pass/fail. Output strict JSON.
-3. **Binding checks are enforced in code, not by the LLM.** The LLM never receives `health_term_found`, `excluded_ingredient_found` or `minutes_mismatch` as instructions — only the two hint fields and `word_count`. After the LLM responds, code forces `verdict = fail` (and adds the matching failure type: `sensitive_inference`, `profile_contradiction`, `fabrication`) whenever one of those three checks fires, regardless of what the LLM concluded. Both the LLM's raw verdict/failure_types and the final merged ones are stored, so a code override is always visible.
+3. **Binding checks are enforced in code, not by the LLM.** The LLM never receives `health_term_found`, `excluded_ingredient_found` or `minutes_mismatch` as instructions — only the two hint fields and `word_count`. After the LLM responds, code forces `verdict = fail` (and adds the matching failure type: `sensitive_inference`, `exclusion_violation` (`profile_contradiction` on `judge_v1`), `fabrication`) whenever one of those three checks fires, regardless of what the LLM concluded. Both the LLM's raw verdict/failure_types and the final merged ones are stored, so a code override is always visible.
+4. **Judge prompts are versioned and immutable once shipped**, like generator prompts: `judge_v1.txt` and its cached/recorded outputs never change. `judge_v2.txt` applies the rubric rulings above, including the `exclusion_violation` rename and making "light" a binding health violation only when the recipe has a health `other_tag` (otherwise it's an allowed flavour word, not even a hint). `python -m judge.run` takes `--judge-version` (default `v1`) to select which prompt/ruleset to run.
 - Judge model must be stronger than the generator.
 - **No temperature control on the current API** (the `2026-10-21` Claude API version rejects `temperature`/`top_p`/`top_k` outright, even at the default) — neither the generator nor the judge sends a sampling parameter. Judge consistency is instead measured as **self-agreement across 2 runs** on the gold set (verdict match rate, failure_type match rate) via `judge.run --no-cache --repeat 2`, and reported alongside kappa.
 

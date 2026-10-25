@@ -17,7 +17,12 @@ HEALTH_TERMS = [
 ]
 # Context-dependent synonyms - hint only, not binding (per Shola: "light" etc.
 # aren't always a health claim, so they don't force a fail on their own).
+# v1: all three are hints. v2 (ruling 1A): "light" becomes a binding check of
+# its own (conditional on the recipe having a health other_tag), so it's
+# dropped from the generic hint list there - see check_rules_v2.
 HEALTH_SYNONYM_HINTS = ["light", "guilt-free", "good for you"]
+HEALTH_SYNONYM_HINTS_V2 = ["guilt-free", "good for you"]
+LIGHT_TERM = "light"
 
 TIME_PHRASE_PATTERNS = [
     re.compile(r"your\s+\d+[\s-]*minute\w*", re.IGNORECASE),
@@ -62,16 +67,13 @@ def check_minutes_mismatch(explanation: str, recipe_minutes: int | None, max_coo
     return any(t != recipe_minutes for t in stated_cook_times)
 
 
-def check_rules(payload: dict, explanation: str) -> dict:
-    """Return all rule-check results (binding + hint), stored in full regardless of
-    which subset the LLM prompt actually shows."""
+def _shared_checks(payload: dict, explanation: str) -> dict:
+    """Checks identical across judge prompt versions: excluded ingredient,
+    minutes mismatch, the time-phrase hint, and word count."""
     recipe = payload["recipe"]
     reasons = payload["reasons"]
     excluded_by = payload["excluded_by"]
     max_cook_minutes = payload["profile_context"]["max_cook_minutes"]
-
-    health_term_found = any(mentions_term(explanation, term) for term in HEALTH_TERMS)
-    health_synonym_hint = [s for s in HEALTH_SYNONYM_HINTS if s.lower() in explanation.lower()]
 
     excluded_ingredient_found = any(
         mentions_term(explanation, term)
@@ -90,10 +92,35 @@ def check_rules(payload: dict, explanation: str) -> dict:
                 time_phrase_without_time_fit.append(match.group(0))
 
     return {
-        "health_term_found": health_term_found,
-        "health_synonym_hint": health_synonym_hint,
         "excluded_ingredient_found": excluded_ingredient_found,
         "minutes_mismatch": minutes_mismatch,
         "time_phrase_without_time_fit": time_phrase_without_time_fit,
         "word_count": len(explanation.split()),
+    }
+
+
+def check_rules(payload: dict, explanation: str) -> dict:
+    """v1 rule checks - frozen, matches judge_v1.txt and its cached outputs exactly."""
+    health_term_found = any(mentions_term(explanation, term) for term in HEALTH_TERMS)
+    health_synonym_hint = [s for s in HEALTH_SYNONYM_HINTS if s.lower() in explanation.lower()]
+    return {
+        "health_term_found": health_term_found,
+        "health_synonym_hint": health_synonym_hint,
+        **_shared_checks(payload, explanation),
+    }
+
+
+def check_rules_v2(payload: dict, explanation: str) -> dict:
+    """v2 rule checks (ruling 1A): "light" is a binding health violation only
+    when the recipe has a health tag in other_tags; otherwise it's an allowed
+    flavour word, not even a hint."""
+    recipe = payload["recipe"]
+    health_term_found = any(mentions_term(explanation, term) for term in HEALTH_TERMS)
+    if recipe.get("other_tags") and mentions_term(explanation, LIGHT_TERM):
+        health_term_found = True
+    health_synonym_hint = [s for s in HEALTH_SYNONYM_HINTS_V2 if s.lower() in explanation.lower()]
+    return {
+        "health_term_found": health_term_found,
+        "health_synonym_hint": health_synonym_hint,
+        **_shared_checks(payload, explanation),
     }

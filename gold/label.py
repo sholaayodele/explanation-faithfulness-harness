@@ -5,16 +5,23 @@ context, explanation) - never the judge's verdict, rationale or rule-check
 results, and never suggests an answer. Saves after every case, so quitting
 ("q") and rerunning resumes where you left off. "b" revisits the previous case.
 
-Usage: python -m gold.label
+Usage:
+    python -m gold.label               # label data/gold/to_label.csv
+    python -m gold.label --adjudicate   # resolve verdict disagreements with the judge
 """
 
+import argparse
 import csv
+import json
 from pathlib import Path
 from random import Random
 
 SEED = 11
 TO_LABEL_PATH = Path("data/gold/to_label.csv")
 GOLD_PATH = Path("data/gold/gold_labels.csv")
+EVAL_SET_PATH = Path("data/processed/eval_set.jsonl")
+JUDGMENTS_PATH = Path("results/v1_judgments.jsonl")
+ADJUDICATED_PATH = Path("data/gold/gold_labels_adjudicated.csv")
 
 FAILURE_TYPES = {
     "1": "fabrication",
@@ -22,8 +29,14 @@ FAILURE_TYPES = {
     "3": "non_causal_reason",
     "4": "omission",
     "5": "overclaiming",
-    "6": "profile_contradiction",
+    "6": "exclusion_violation",
     "7": "sensitive_inference",
+}
+
+BUCKETS = {
+    "1": "judge_error",
+    "2": "rubric_gap",
+    "3": "my_slip",
 }
 
 COLUMNS = [
@@ -31,6 +44,7 @@ COLUMNS = [
     "recipe_name", "recipe_minutes", "profile_context", "explanation",
     "my_verdict", "my_failure_types", "my_note",
 ]
+ADJUDICATED_COLUMNS = COLUMNS + ["adjudicated", "bucket", "change_reason"]
 
 RULES_REMINDER = (
     "Rules: 1 Grounded (customer claims must come from reasons; meal facts may come from recipe fields) | "
@@ -117,6 +131,163 @@ def _prompt_note() -> str:
     return input("Note (optional, Enter to skip): ").strip()
 
 
+def _prompt_bucket() -> str:
+    options = ", ".join(f"{k}={v}" for k, v in BUCKETS.items())
+    while True:
+        raw = input(f"Bucket ({options}): ").strip()
+        if raw in BUCKETS:
+            return BUCKETS[raw]
+        print("Enter 1, 2, or 3.")
+
+
+def _prompt_change_reason() -> str:
+    return input("Change reason (short): ").strip()
+
+
+def _load_judgments() -> dict[str, dict]:
+    judgments = {}
+    with JUDGMENTS_PATH.open() as f:
+        for line in f:
+            row = json.loads(line)
+            judgments[row["case_id"]] = row
+    return judgments
+
+
+def _load_eval_payloads() -> dict[str, dict]:
+    payloads = {}
+    with EVAL_SET_PATH.open() as f:
+        for line in f:
+            row = json.loads(line)
+            payloads[row["case_id"]] = row["payload"]
+    return payloads
+
+
+def _load_existing_adjudications() -> dict[str, dict]:
+    if not ADJUDICATED_PATH.exists():
+        return {}
+    with ADJUDICATED_PATH.open(newline="") as f:
+        rows = list(csv.DictReader(f))
+    return {row["case_id"]: row for row in rows if row.get("adjudicated") == "yes"}
+
+
+def _display_adjudication_case(gold_row: dict, judge_row: dict, payload: dict, position: int, total: int) -> None:
+    print(f"\n{'=' * 70}")
+    print(f"Adjudication {position}/{total}  ({gold_row['case_id']})")
+    print("=" * 70)
+
+    print("\nReasons:")
+    for i, (code, value, weight) in enumerate(_parse_reasons(gold_row["reasons"]), start=1):
+        tag = "  <-- PRIMARY" if i == 1 else ""
+        print(f"  {i}. {code}={value}  (weight {weight}){tag}")
+
+    print(f"\nConfidence: {gold_row['confidence']}")
+    print(f"Fallback: {gold_row['fallback'] or '(none)'}")
+    other_tags = payload["recipe"].get("other_tags") or []
+    print(f"Recipe other_tags: {', '.join(other_tags) if other_tags else '(none)'}")
+
+    print("\nProfile context (BACKGROUND ONLY — not a valid source for reasons):")
+    print(f"  {gold_row['profile_context']}")
+
+    print(f"\nExplanation:\n  \"{gold_row['explanation']}\"")
+
+    print("\n--- Your original label ---")
+    print(f"  Verdict: {gold_row['my_verdict']}")
+    print(f"  Failure types: {gold_row['my_failure_types'] or '(none)'}")
+    print(f"  Note: {gold_row['my_note'] or '(none)'}")
+
+    print("\n--- Judge ---")
+    judge_types = judge_row.get("failure_types") or []
+    print(f"  Verdict: {judge_row['verdict']}")
+    print(f"  Failure types: {', '.join(judge_types) if judge_types else '(none)'}")
+    print(f"  Rationale: {judge_row.get('rationale', '(none)')}")
+
+
+def _save_adjudicated(gold_rows: list[dict], adjudications: dict[str, dict]) -> None:
+    with ADJUDICATED_PATH.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=ADJUDICATED_COLUMNS)
+        writer.writeheader()
+        for row in gold_rows:
+            case_id = row["case_id"]
+            out_row = {col: row.get(col, "") for col in COLUMNS}
+            if case_id in adjudications:
+                out_row.update(adjudications[case_id])
+            else:
+                out_row["adjudicated"] = "no"
+                out_row["bucket"] = ""
+                out_row["change_reason"] = ""
+            writer.writerow(out_row)
+
+
+def run_adjudicate() -> None:
+    gold_rows = _load_gold_labels()
+    gold_by_id = {row["case_id"]: row for row in gold_rows}
+    judgments = _load_judgments()
+    payloads = _load_eval_payloads()
+
+    disagreement_ids = [
+        row["case_id"] for row in gold_rows
+        if row["my_verdict"].strip().lower() != judgments[row["case_id"]]["verdict"]
+    ]
+    total = len(disagreement_ids)
+
+    existing = _load_existing_adjudications()
+    adjudications = {cid: existing[cid] for cid in existing if cid in disagreement_ids}
+
+    if adjudications:
+        print(f"Resuming adjudication: {len(adjudications)}/{total} already resolved.")
+    else:
+        print(f"Starting adjudication: 0/{total} disagreements to resolve.")
+
+    index = 0
+    while index < total and disagreement_ids[index] in adjudications:
+        index += 1
+
+    try:
+        while index < total:
+            case_id = disagreement_ids[index]
+            _display_adjudication_case(
+                gold_by_id[case_id], judgments[case_id], payloads[case_id], len(adjudications) + 1, total
+            )
+
+            verdict = _prompt_verdict()
+            if verdict == "q":
+                print(f"\nStopped at {len(adjudications)}/{total}. Run `python -m gold.label --adjudicate` again to resume.")
+                return
+            if verdict == "b":
+                if index == 0:
+                    print("Already at the first case.")
+                    continue
+                index -= 1
+                adjudications.pop(disagreement_ids[index], None)
+                continue
+
+            failure_types = _prompt_failure_types() if verdict == "f" else []
+            bucket = _prompt_bucket()
+            change_reason = _prompt_change_reason()
+
+            adjudications[case_id] = {
+                "case_id": case_id,
+                "my_verdict": "pass" if verdict == "p" else "fail",
+                "my_failure_types": " ".join(failure_types),
+                "adjudicated": "yes",
+                "bucket": bucket,
+                "change_reason": change_reason,
+            }
+            _save_adjudicated(gold_rows, adjudications)
+            print(f"Saved. Progress: {len(adjudications)}/{total}")
+            index += 1
+    except (KeyboardInterrupt, EOFError):
+        print(f"\n\nStopped at {len(adjudications)}/{total}. Run `python -m gold.label --adjudicate` again to resume.")
+        return
+
+    print(f"\nAll {total} disagreements adjudicated.")
+
+
+def _load_gold_labels() -> list[dict]:
+    with GOLD_PATH.open(newline="") as f:
+        return list(csv.DictReader(f))
+
+
 def _save(to_label_rows: list[dict], answers: dict[str, dict]) -> None:
     with GOLD_PATH.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=COLUMNS)
@@ -181,4 +352,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--adjudicate", action="store_true", help="resolve verdict disagreements with the judge")
+    args = parser.parse_args()
+    run_adjudicate() if args.adjudicate else main()

@@ -3,6 +3,7 @@
 Usage:
     python -m judge.run --version v1 --case-ids c_0001,c_0002
     python -m judge.run --version v1 --limit 10
+    python -m judge.run --version v1 --judge-version v2 --limit 10
 """
 
 import argparse
@@ -13,13 +14,12 @@ from pathlib import Path
 import anthropic
 from dotenv import load_dotenv
 
-from judge.rules import check_rules
+from judge.rules import check_rules, check_rules_v2
 
 load_dotenv()
 
 EVAL_SET_PATH = Path("data/processed/eval_set.jsonl")
-JUDGE_PROMPT_PATH = Path("judge/prompts/judge_v1.txt")
-JUDGE_VERSION = "v1"
+PROMPTS_DIR = Path("judge/prompts")
 CACHE_DIR = Path("results/cache")
 OUT_DIR = Path("results")
 
@@ -28,24 +28,46 @@ MAX_TOKENS = 4096
 MAX_ATTEMPTS = 2
 
 PAYLOAD_KEYS = ["recipe", "reasons", "confidence", "fallback", "profile_context", "excluded_by"]
-
 VALID_ABOUT = {"customer", "meal", "flavour"}
-VALID_FAILURE_TYPES = {
-    "fabrication", "misattribution", "non_causal_reason", "omission",
-    "overclaiming", "profile_contradiction", "sensitive_inference",
-}
 
-# Binding rule checks -> the failure type code forces when the check fires.
-# Enforced here, in code, after the LLM responds - never sent to the LLM as
-# an instruction, since a regex false positive (or negative) shouldn't be
-# something the LLM is told to blindly trust.
-BINDING_OVERRIDES = {
-    "health_term_found": "sensitive_inference",
-    "excluded_ingredient_found": "profile_contradiction",
-    "minutes_mismatch": "fabrication",
+# Each judge prompt version is a frozen, independent ruleset: once shipped, a
+# version's prompt text, rule-check function, failure-type taxonomy and
+# binding overrides never change - a new ruling becomes a new version instead.
+RULESETS = {
+    "v1": {
+        "prompt_path": PROMPTS_DIR / "judge_v1.txt",
+        "rule_check_fn": check_rules,
+        "valid_failure_types": {
+            "fabrication", "misattribution", "non_causal_reason", "omission",
+            "overclaiming", "profile_contradiction", "sensitive_inference",
+        },
+        # Binding rule checks -> the failure type code forces when the check fires.
+        # Enforced here, in code, after the LLM responds - never sent to the LLM
+        # as an instruction, since a regex false positive/negative shouldn't be
+        # something the LLM is told to blindly trust.
+        "binding_overrides": {
+            "health_term_found": "sensitive_inference",
+            "excluded_ingredient_found": "profile_contradiction",
+            "minutes_mismatch": "fabrication",
+        },
+    },
+    "v2": {
+        "prompt_path": PROMPTS_DIR / "judge_v2.txt",
+        "rule_check_fn": check_rules_v2,
+        "valid_failure_types": {
+            "fabrication", "misattribution", "non_causal_reason", "omission",
+            "overclaiming", "exclusion_violation", "sensitive_inference",
+        },
+        "binding_overrides": {
+            "health_term_found": "sensitive_inference",
+            "excluded_ingredient_found": "exclusion_violation",
+            "minutes_mismatch": "fabrication",
+        },
+    },
 }
 # Only these rule-check fields are shown to the LLM - hints for its own
-# judgment, not instructions to follow mechanically.
+# judgment, not instructions to follow mechanically. Same keys across
+# versions; the *content* of health_synonym_hint differs (see judge/rules.py).
 LLM_VISIBLE_RULE_CHECK_KEYS = ["time_phrase_without_time_fit", "health_synonym_hint", "word_count"]
 
 
@@ -53,8 +75,8 @@ def _prompt_hash(prompt_text: str) -> str:
     return hashlib.sha256(prompt_text.encode()).hexdigest()
 
 
-def _load_prompt() -> str:
-    return JUDGE_PROMPT_PATH.read_text()
+def _load_prompt(judge_version: str) -> str:
+    return RULESETS[judge_version]["prompt_path"].read_text()
 
 
 def _load_eval_set() -> dict[str, dict]:
@@ -80,8 +102,8 @@ def _filtered_payload(payload: dict) -> dict:
     return {k: payload[k] for k in PAYLOAD_KEYS}
 
 
-def _cache_path(generator_version: str, case_id: str) -> Path:
-    return CACHE_DIR / f"judge_{JUDGE_VERSION}_{generator_version}_{case_id}.json"
+def _cache_path(judge_version: str, generator_version: str, case_id: str) -> Path:
+    return CACHE_DIR / f"judge_{judge_version}_{generator_version}_{case_id}.json"
 
 
 def _valid_source(source: object) -> bool:
@@ -90,7 +112,7 @@ def _valid_source(source: object) -> bool:
     )
 
 
-def validate_judgment(data: object) -> list[str]:
+def validate_judgment(data: object, valid_failure_types: set[str]) -> list[str]:
     """Check shape, enums, and the verdict<->failure_types consistency rule."""
     if not isinstance(data, dict):
         return ["response is not a JSON object"]
@@ -121,7 +143,7 @@ def validate_judgment(data: object) -> list[str]:
             if not isinstance(claim.get("supported"), bool):
                 errors.append(f"claims[{i}].supported is not a bool")
             failure_type = claim.get("failure_type")
-            if failure_type is not None and failure_type not in VALID_FAILURE_TYPES:
+            if failure_type is not None and failure_type not in valid_failure_types:
                 errors.append(f"claims[{i}].failure_type invalid: {failure_type!r}")
 
     for key in ["primary_reason_stated", "calibration_ok", "safe_ok"]:
@@ -129,7 +151,7 @@ def validate_judgment(data: object) -> list[str]:
             errors.append(f"{key} is not a bool")
 
     failure_types = data.get("failure_types")
-    if not isinstance(failure_types, list) or any(ft not in VALID_FAILURE_TYPES for ft in failure_types):
+    if not isinstance(failure_types, list) or any(ft not in valid_failure_types for ft in failure_types):
         errors.append(f"failure_types invalid: {failure_types!r}")
 
     if data.get("verdict") not in ("pass", "fail"):
@@ -160,11 +182,12 @@ def _call_judge(client: anthropic.Anthropic, prompt_text: str) -> tuple[str, int
 
 
 def _judge_once(
-    client: anthropic.Anthropic, generator_version: str, case_id: str, payload: dict, explanation: str,
-    judge_prompt_text: str, judge_prompt_hash: str,
+    client: anthropic.Anthropic, judge_version: str, generator_version: str, case_id: str, payload: dict,
+    explanation: str, judge_prompt_text: str, judge_prompt_hash: str,
 ) -> dict:
     """One full judge pass (LLM call + validation/retry + binding-check merge), no caching."""
-    rule_checks = check_rules(payload, explanation)
+    ruleset = RULESETS[judge_version]
+    rule_checks = ruleset["rule_check_fn"](payload, explanation)
     llm_visible_rule_checks = {k: rule_checks[k] for k in LLM_VISIBLE_RULE_CHECK_KEYS}
     filled_prompt = (
         judge_prompt_text
@@ -187,7 +210,7 @@ def _judge_once(
         except json.JSONDecodeError as e:
             validation_errors = [f"malformed JSON: {e}"]
             continue
-        validation_errors = validate_judgment(data)
+        validation_errors = validate_judgment(data, ruleset["valid_failure_types"])
         if not validation_errors:
             parsed = data
             break
@@ -199,6 +222,7 @@ def _judge_once(
         return {
             "case_id": case_id,
             "generator_version": generator_version,
+            "judge_version": judge_version,
             "judge_model": JUDGE_MODEL,
             "verdict": "judge_error",
             "validation_errors": validation_errors,
@@ -210,8 +234,9 @@ def _judge_once(
     raw_verdict = parsed["verdict"]
     raw_failure_types = list(parsed["failure_types"])
 
-    fired_overrides = [flag for flag in BINDING_OVERRIDES if rule_checks[flag]]
-    final_failure_types = set(raw_failure_types) | {BINDING_OVERRIDES[flag] for flag in fired_overrides}
+    binding_overrides = ruleset["binding_overrides"]
+    fired_overrides = [flag for flag in binding_overrides if rule_checks[flag]]
+    final_failure_types = set(raw_failure_types) | {binding_overrides[flag] for flag in fired_overrides}
     final_verdict = "fail" if final_failure_types else "pass"
     final_safe_ok = parsed["safe_ok"] and not rule_checks["health_term_found"] and not rule_checks["excluded_ingredient_found"]
     outcome_changed = final_verdict != raw_verdict or set(raw_failure_types) != final_failure_types
@@ -219,6 +244,7 @@ def _judge_once(
     result = {
         "case_id": case_id,
         "generator_version": generator_version,
+        "judge_version": judge_version,
         "judge_model": JUDGE_MODEL,
         "raw_verdict": raw_verdict,
         "raw_failure_types": raw_failure_types,
@@ -239,10 +265,10 @@ def _judge_once(
 
 
 def judge_case(
-    client: anthropic.Anthropic, generator_version: str, case_id: str, payload: dict, explanation: str,
-    judge_prompt_text: str, judge_prompt_hash: str,
+    client: anthropic.Anthropic, judge_version: str, generator_version: str, case_id: str, payload: dict,
+    explanation: str, judge_prompt_text: str, judge_prompt_hash: str,
 ) -> dict:
-    cache_path = _cache_path(generator_version, case_id)
+    cache_path = _cache_path(judge_version, generator_version, case_id)
     if cache_path.exists():
         cached = json.loads(cache_path.read_text())
         if cached["judge_prompt_hash"] != judge_prompt_hash:
@@ -253,15 +279,18 @@ def judge_case(
             )
         return cached
 
-    result = _judge_once(client, generator_version, case_id, payload, explanation, judge_prompt_text, judge_prompt_hash)
+    result = _judge_once(
+        client, judge_version, generator_version, case_id, payload, explanation, judge_prompt_text, judge_prompt_hash
+    )
     if result["verdict"] != "judge_error":
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         cache_path.write_text(json.dumps(result, indent=2))
     return result
 
 
-def _write_judgments(generator_version: str, results: list[dict]) -> Path:
-    out_path = OUT_DIR / f"{generator_version}_judgments.jsonl"
+def _write_judgments(judge_version: str, generator_version: str, results: list[dict]) -> Path:
+    suffix = "" if judge_version == "v1" else f"_judge_{judge_version}"
+    out_path = OUT_DIR / f"{generator_version}{suffix}_judgments.jsonl"
     existing = {}
     if out_path.exists():
         with out_path.open() as f:
@@ -279,7 +308,7 @@ def _write_judgments(generator_version: str, results: list[dict]) -> Path:
 
 
 def run_self_agreement(
-    client: anthropic.Anthropic, generator_version: str, case_ids: list[str],
+    client: anthropic.Anthropic, judge_version: str, generator_version: str, case_ids: list[str],
     eval_rows: dict[str, dict], outputs: dict[str, dict],
     judge_prompt_text: str, judge_prompt_hash: str, repeat: int,
 ) -> dict:
@@ -292,7 +321,10 @@ def run_self_agreement(
         explanation = outputs[case_id]["explanation"]
         runs = []
         for _ in range(repeat):
-            result = _judge_once(client, generator_version, case_id, payload, explanation, judge_prompt_text, judge_prompt_hash)
+            result = _judge_once(
+                client, judge_version, generator_version, case_id, payload, explanation,
+                judge_prompt_text, judge_prompt_hash,
+            )
             total_input += result["tokens"]["input"]
             total_output += result["tokens"]["output"]
             runs.append(result)
@@ -322,13 +354,14 @@ def run_self_agreement(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", required=True, help="generator version to judge")
+    parser.add_argument("--judge-version", default="v1", choices=sorted(RULESETS.keys()))
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--case-ids", default=None)
     parser.add_argument("--no-cache", action="store_true", help="bypass cache entirely (used with --repeat)")
     parser.add_argument("--repeat", type=int, default=1, help="judge each case this many times, for self-agreement")
     args = parser.parse_args()
 
-    judge_prompt_text = _load_prompt()
+    judge_prompt_text = _load_prompt(args.judge_version)
     judge_prompt_hash = _prompt_hash(judge_prompt_text)
     eval_rows = _load_eval_set()
     outputs = _load_generator_outputs(args.version)
@@ -344,11 +377,16 @@ def main() -> None:
 
     if args.no_cache and args.repeat > 1:
         agreement = run_self_agreement(
-            client, args.version, case_ids, eval_rows, outputs, judge_prompt_text, judge_prompt_hash, args.repeat
+            client, args.judge_version, args.version, case_ids, eval_rows, outputs,
+            judge_prompt_text, judge_prompt_hash, args.repeat,
         )
         pricing = {"input": 2.00 / 1_000_000, "output": 10.00 / 1_000_000}
         cost = agreement["tokens"]["input"] * pricing["input"] + agreement["tokens"]["output"] * pricing["output"]
-        out_path = OUT_DIR / f"{args.version}_judge_self_agreement.json"
+        # v1 keeps its original filename (already committed); v2+ gets a version marker.
+        if args.judge_version == "v1":
+            out_path = OUT_DIR / f"{args.version}_judge_self_agreement.json"
+        else:
+            out_path = OUT_DIR / f"{args.version}_judge_{args.judge_version}_self_agreement.json"
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         out_path.write_text(json.dumps({**agreement, "estimated_cost": cost}, indent=2))
         print(f"Self-agreement over {agreement['n_cases']} cases, {args.repeat} runs each:")
@@ -364,7 +402,9 @@ def main() -> None:
     for case_id in case_ids:
         payload = eval_rows[case_id]["payload"]
         explanation = outputs[case_id]["explanation"]
-        result = judge_case(client, args.version, case_id, payload, explanation, judge_prompt_text, judge_prompt_hash)
+        result = judge_case(
+            client, args.judge_version, args.version, case_id, payload, explanation, judge_prompt_text, judge_prompt_hash
+        )
         results.append(result)
         if result["verdict"] == "judge_error":
             errors += 1
@@ -373,7 +413,7 @@ def main() -> None:
             override_note = f" [OVERRIDE: {result['code_overrides']}]" if result["override_changed_outcome"] else ""
             print(f"{case_id}: {result['verdict']} {result['failure_types']}{override_note}")
 
-    out_path = _write_judgments(args.version, results)
+    out_path = _write_judgments(args.judge_version, args.version, results)
 
     total_input = sum(r["tokens"]["input"] for r in results)
     total_output = sum(r["tokens"]["output"] for r in results)

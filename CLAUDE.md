@@ -176,6 +176,7 @@ data/gold/         # Shola's hand labels
 schema/            # payload_v0_1.json + validator
 generator/         # generation code + prompts/
 judge/             # rule checks + LLM judge
+metrics/           # metrics report generation (reads results/, no API calls)
 results/           # run outputs, metrics, charts, cache/
 notebooks/         # exploration only
 ```
@@ -203,6 +204,6 @@ notebooks/         # exploration only
 - [x] 6. v1 generator (10 cases, then 200)
 - [x] 7. Rule checks + LLM judge
 - [~] 8. Gold labels (Shola, ~50 cases) + kappa — **in progress, adjudication pending** (κ=0.271 vs human; see `results/judge_validation.md`)
-- [ ] 9. v1 metrics
+- [x] 9. v1 metrics
 - [ ] 10. v2 guardrails + rerun + comparison chart
 - [ ] 11. README case study (Shola writes; Claude helps format)

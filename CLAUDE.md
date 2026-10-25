@@ -193,7 +193,7 @@ notebooks/         # exploration only
 - [x] 5. Matcher + 200-case eval set
 - [x] 6. v1 generator (10 cases, then 200)
 - [x] 7. Rule checks + LLM judge
-- [ ] 8. Gold labels (Shola, ~50 cases) + kappa
+- [~] 8. Gold labels (Shola, ~50 cases) + kappa — **in progress, adjudication pending** (κ=0.271 vs human; see `results/judge_validation.md`)
 - [ ] 9. v1 metrics
 - [ ] 10. v2 guardrails + rerun + comparison chart
 - [ ] 11. README case study (Shola writes; Claude helps format)

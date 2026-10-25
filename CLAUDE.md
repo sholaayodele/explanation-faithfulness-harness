@@ -203,7 +203,7 @@ notebooks/         # exploration only
 - [x] 5. Matcher + 200-case eval set
 - [x] 6. v1 generator (10 cases, then 200)
 - [x] 7. Rule checks + LLM judge
-- [~] 8. Gold labels (Shola, ~50 cases) + kappa — **in progress, adjudication pending** (κ=0.271 vs human; see `results/judge_validation.md`)
+- [x] 8. Gold labels + judge validation — first pass κ=0.271 (n=50); judge self-agreement 98%; adjudicated (0 judge errors, 12 my slips, 6 rubric gaps → rulings 1–5); judge v2 κ=0.958 on tuning set; fresh blind hold-out κ=0.327 (n=20), judge correct on all 7 disagreements on adjudication. Judge v2 is the validated judge. See `results/judge_validation.md` and `judge_validation_v2.md`.
 - [x] 9. v1 metrics
 - [ ] 10. v2 guardrails + rerun + comparison chart
 - [ ] 11. README case study (Shola writes; Claude helps format)

@@ -141,9 +141,11 @@ Locked decisions for data prep and the matcher (Shola-approved; changes need sig
 - Length compliance
 
 ## Judge design
-1. **Rule checks (deterministic, run first):** excluded ingredient mentioned; stated cook time ≠ recipe minutes; length > 40 words.
+1. **Rule checks (deterministic, run first):** health tag mentioned; excluded ingredient mentioned; stated cook time ≠ recipe minutes (limit/window mentions of a time figure don't count - only an actual stated cook time); length > 40 words. Also computed as hints only: time-limit phrasing when `TIME_FIT` is absent; context-dependent health synonyms ("light", "guilt-free", "good for you").
 2. **LLM judge:** extract each claim → mark supported/unsupported against payload → assign failure type(s) → overall pass/fail. Output strict JSON.
+3. **Binding checks are enforced in code, not by the LLM.** The LLM never receives `health_term_found`, `excluded_ingredient_found` or `minutes_mismatch` as instructions — only the two hint fields and `word_count`. After the LLM responds, code forces `verdict = fail` (and adds the matching failure type: `sensitive_inference`, `profile_contradiction`, `fabrication`) whenever one of those three checks fires, regardless of what the LLM concluded. Both the LLM's raw verdict/failure_types and the final merged ones are stored, so a code override is always visible.
 - Judge model must be stronger than the generator.
+- **No temperature control on the current API** (the `2026-10-21` Claude API version rejects `temperature`/`top_p`/`top_k` outright, even at the default) — neither the generator nor the judge sends a sampling parameter. Judge consistency is instead measured as **self-agreement across 2 runs** on the gold set (verdict match rate, failure_type match rate) via `judge.run --no-cache --repeat 2`, and reported alongside kappa.
 
 ## Models and budget
 - Generator: `claude-haiku-5-5`. Judge: `claude-sonnet-5-5`.
@@ -190,7 +192,7 @@ notebooks/         # exploration only
 - [x] 4. Synthetic profiles
 - [x] 5. Matcher + 200-case eval set
 - [x] 6. v1 generator (10 cases, then 200)
-- [ ] 7. Rule checks + LLM judge
+- [x] 7. Rule checks + LLM judge
 - [ ] 8. Gold labels (Shola, ~50 cases) + kappa
 - [ ] 9. v1 metrics
 - [ ] 10. v2 guardrails + rerun + comparison chart

@@ -21,10 +21,8 @@ CACHE_DIR = Path("results/cache")
 OUT_DIR = Path("results")
 
 MODEL = "claude-haiku-5-5"
-# Haiku 5.5's own default sampling temperature. Not sent on the request: the Claude
-# API's 2026-10-21 version rejects temperature/top_p/top_k entirely, even at the
-# default value (400) - recorded here only as documentation of the sampling used.
-TEMPERATURE = 1.0
+# No sampling parameter is sent: the Claude API's 2026-10-21 version rejects
+# temperature/top_p/top_k entirely, even at the default value (400 error).
 MAX_TOKENS = 120
 
 # Source: Anthropic's published Claude API pricing (platform.claude.com/docs/en/about-claude/pricing),
@@ -97,13 +95,15 @@ def generate_case(
         "model": MODEL,
         "explanation": explanation,
         "tokens": {"input": input_tokens, "output": output_tokens},
-        "temperature": TEMPERATURE,
         "max_tokens": MAX_TOKENS,
         "prompt_hash": prompt_hash,
     }
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(json.dumps(result, indent=2))
     return result
+
+
+OUTPUT_FIELDS = ["case_id", "prompt_version", "model", "explanation", "tokens", "max_tokens"]
 
 
 def _write_outputs(version: str, results: list[dict]) -> Path:
@@ -115,7 +115,7 @@ def _write_outputs(version: str, results: list[dict]) -> Path:
                 row = json.loads(line)
                 existing[row["case_id"]] = row
     for result in results:
-        existing[result["case_id"]] = {k: v for k, v in result.items() if k != "prompt_hash"}
+        existing[result["case_id"]] = {k: result[k] for k in OUTPUT_FIELDS}
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as f:

@@ -15,5 +15,7 @@ output.
 | 2026-10-25 | 9 | Judge v2, full eval set (130 newly judged, 70 reused from cache) | claude-sonnet-5-5 | 130 | 363,772 | 77,093 | $1.4985 |
 | 2026-10-25 | 10 | Generator v2, full eval set (190 newly generated, 10 reused from cache) | claude-haiku-5-5 | 190 | 593,656 | 11,541 | $0.0651 |
 | 2026-10-25 | 10 | Judge v2 on generator v2 outputs, full eval set | claude-sonnet-5-5 | 200 | 557,205 | 97,865 | $2.0931 |
+| 2026-10-26 | 10.1 | Generator v2.1, 12 fallback cases | claude-haiku-5-5 | 12 | 33,740 | 708 | $0.0037 |
+| 2026-10-26 | 10.1 | Judge v2 on generator v2.1 outputs, 12 fallback cases | claude-sonnet-5-5 | 12 | 31,544 | 5,669 | $0.1198 |
 
-**Running project total: $7.8927** of the ~€10 budget.
+**Running project total: $8.0162** of the ~€10 budget.

@@ -1,0 +1,191 @@
+You are writing for a meal-kit app. Given this payload, write a 1-2 sentence explanation (max 40 words) of why this meal was chosen for the customer. Follow every rule below exactly.
+
+1. Customer claims only from reasons. Anything you say about the customer (what they like, their diet, their time limit, their history) must come from an entry in `reasons`. Use this phrasing per code:
+   - LIKED_INGREDIENT: "you love [value]" / "made with [value], which you like"
+   - CUISINE_MATCH: "[value] flavours you enjoy" / "one of your favourite cuisines"
+   - DIET_COMPLIANT: "fits your [value] diet"
+   - TIME_FIT: "ready in [recipe minutes] minutes, within your [value]-minute limit"
+   - SIMILAR_TO_RATED: "similar to [value] dishes you've rated highly" (never name a specific dish)
+   - NEW_TO_YOU: "a new cuisine for you to try: [value]"
+   - POPULAR_FALLBACK: "highly rated by other customers"
+
+2. profile_context is background only. Never use it as a reason. Never mention the customer's time limit, schedule or cooking window unless TIME_FIT is in reasons. Never mention dishes they rated, or their favourite cuisines, unless the matching reason is present.
+
+3. No health language. Never describe the meal as healthy, light, lighter, low-calorie, low-carb, low-sodium, low-cholesterol, guilt-free or good for you, and never guess at the customer's health, weight or goals.
+
+4. Lead with the primary reason (the highest weight) in the first sentence.
+
+5. Match the confidence. If confidence is low or fallback is set, use honest framing ("a quick option to try", "popular with customers this week") and never imply personal tailoring ("for your taste", "you'll love", "picked for you"). An honest note that the pick isn't based on their favourites is fine.
+
+6. Facts about the meal are fine: its name, cook time, ingredients and diet tags. Write 1-2 sentences, at most 40 words, plain text only, with no preamble or quotes.
+
+Example 1 — standard, high confidence, two reasons, no TIME_FIT:
+Payload:
+{{
+  "recipe": {{
+    "id": "ex_001",
+    "name": "lemon herb salmon with asparagus",
+    "cuisine": "french",
+    "minutes": 25,
+    "main_ingredient": "salmon",
+    "ingredients": [
+      "salmon fillet",
+      "asparagus",
+      "lemon",
+      "butter",
+      "garlic",
+      "parsley"
+    ],
+    "key_ingredients": [
+      "salmon fillet",
+      "asparagus",
+      "lemon"
+    ],
+    "diet_tags": [],
+    "other_tags": []
+  }},
+  "reasons": [
+    {{
+      "code": "LIKED_INGREDIENT",
+      "field": "liked_ingredients",
+      "value": "salmon",
+      "weight": 0.6
+    }},
+    {{
+      "code": "CUISINE_MATCH",
+      "field": "cuisine_prefs",
+      "value": "french",
+      "weight": 0.4
+    }}
+  ],
+  "confidence": "high",
+  "fallback": null,
+  "profile_context": {{
+    "cuisine_prefs": [
+      "french",
+      "italian"
+    ],
+    "diet": [],
+    "liked_ingredients": [
+      "salmon"
+    ],
+    "exclusions": [],
+    "max_cook_minutes": 30,
+    "rated_highly_names": [
+      "garlic butter shrimp pasta"
+    ]
+  }},
+  "excluded_by": []
+}}
+Explanation: You love salmon, and this lemon herb salmon with asparagus brings French flavours you enjoy. It's ready in 25 minutes.
+
+Example 2 — low confidence, TIME_FIT is the only reason:
+Payload:
+{{
+  "recipe": {{
+    "id": "ex_002",
+    "name": "sweet and sour tofu stir-fry",
+    "cuisine": "chinese",
+    "minutes": 18,
+    "main_ingredient": null,
+    "ingredients": [
+      "tofu",
+      "bell pepper",
+      "pineapple",
+      "soy sauce",
+      "rice vinegar"
+    ],
+    "key_ingredients": [
+      "tofu",
+      "bell pepper",
+      "pineapple"
+    ],
+    "diet_tags": [
+      "vegetarian"
+    ],
+    "other_tags": []
+  }},
+  "reasons": [
+    {{
+      "code": "TIME_FIT",
+      "field": "max_cook_minutes",
+      "value": 40,
+      "recipe_minutes": 18,
+      "weight": 1.0
+    }}
+  ],
+  "confidence": "low",
+  "fallback": null,
+  "profile_context": {{
+    "cuisine_prefs": [
+      "mexican"
+    ],
+    "diet": [],
+    "liked_ingredients": [
+      "chicken"
+    ],
+    "exclusions": [],
+    "max_cook_minutes": 40,
+    "rated_highly_names": [
+      "beef barbacoa tacos"
+    ]
+  }},
+  "excluded_by": []
+}}
+Explanation: A quick option to try, not based on your usual favourites: this tofu stir-fry is ready in 18 minutes, well within your 40-minute limit.
+
+Example 3 — fallback, no personal signal:
+Payload:
+{{
+  "recipe": {{
+    "id": "ex_003",
+    "name": "spiced butternut squash soup",
+    "cuisine": null,
+    "minutes": 35,
+    "main_ingredient": null,
+    "ingredients": [
+      "butternut squash",
+      "onion",
+      "vegetable stock",
+      "ginger",
+      "coconut milk"
+    ],
+    "key_ingredients": [
+      "butternut squash",
+      "ginger",
+      "coconut milk"
+    ],
+    "diet_tags": [
+      "vegetarian",
+      "vegan"
+    ],
+    "other_tags": [
+      "low-calorie"
+    ]
+  }},
+  "reasons": [
+    {{
+      "code": "POPULAR_FALLBACK",
+      "field": "popularity",
+      "value": 4.8,
+      "weight": 1.0
+    }}
+  ],
+  "confidence": "low",
+  "fallback": "POPULAR_FALLBACK",
+  "profile_context": {{
+    "cuisine_prefs": [],
+    "diet": [],
+    "liked_ingredients": [],
+    "exclusions": [],
+    "max_cook_minutes": 45,
+    "rated_highly_names": []
+  }},
+  "excluded_by": []
+}}
+Explanation: This spiced butternut squash soup is highly rated by other customers, ready in 35 minutes. We don't know your taste yet, so this is a safe, well-liked place to start.
+
+Now write the explanation for this payload. Return only the explanation text, with no preamble or quotes.
+
+Payload:
+{payload_json}

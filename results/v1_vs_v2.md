@@ -97,3 +97,41 @@ v2's copy frequently reads as the phrasing guide (rule 1 of `generator/prompts/v
 - **c_0015**: "You love mushroom, and this vegan dish is made with brown button mushrooms, which you like. It's a new cuisine for you to try: French, and it's ready in 20 minutes."
 - **c_0151**: "A new cuisine for you to try: Indian. This shahi murg is an aromatic chicken dish with yoghurt and spices, ready in 40 minutes."
 - **c_0172**: "A new cuisine for you to try: this Italian chicken pasta toss with spaghetti, tomatoes and parmesan is ready in 35 minutes."
+
+## v2.1 follow-up
+
+Pre-registered in CLAUDE.md ("v2.1 pre-registration") before this run: `generator/prompts/v2_1.txt` changes
+only the `POPULAR_FALLBACK` phrasing in rule 1 and the fallback example, from "popular with customers this
+week" to "highly rated by other customers". Tested on the 12 `fallback` cases only — **other case types are
+not re-run and stay untested.**
+
+**Pass rate: 11/12 (91.7%)** — meets the pre-registered success threshold (≥70%, ≥9/12).
+
+| failure type | count |
+|---|---|
+| fabrication | 1 |
+
+**All 12 explanations:**
+
+| case_id | verdict | failure type | v2.1 explanation |
+|---|---|---|---|
+| c_0153 | fail | fabrication | "A popular pick with other customers this week: this Mexican grilled chicken is ready in 23 minutes, and it's a safe, well-liked place to start." |
+| c_0154 | pass | — | "This tvp vegan sloppy joe is highly rated by other customers and ready in 30 minutes. We don't know your taste yet, so it's a well-liked place to start." |
+| c_0155 | pass | — | "Highly rated by other customers, this garlic chicken breasts in balsamic vinegar is ready in 30 minutes. We don't know your taste yet, so it's a well-liked place to start." |
+| c_0156 | pass | — | "This linguine with garlic shrimp is highly rated by other customers and ready in 25 minutes. We don't know your taste yet, so it's a popular place to start." |
+| c_0157 | pass | — | "Highly rated by other customers, this Mexican-twist hamburger casserole with pasta, taco seasoning and cheddar takes 55 minutes. We don't know your taste yet, so it's a popular place to start." |
+| c_0158 | pass | — | "Highly rated by other customers, this chorizo potato frittata is ready in 25 minutes. We don't know your taste yet, so it's a well-liked place to start." |
+| c_0159 | pass | — | "Highly rated by other customers, this pork chop dish with balsamic vinegar and shallot sauce is ready in 20 minutes. We don't know your taste yet, so it's a well-liked place to start." |
+| c_0160 | pass | — | "Highly rated by other customers, this pepper seared tuna steaks dish is ready in 20 minutes. We don't know your taste yet, so it's a well-liked place to start." |
+| c_0161 | pass | — | "This quinoa black bean salad is highly rated by other customers and ready in 15 minutes. We don't know your taste yet, so it's a well-liked place to start." |
+| c_0162 | pass | — | "Highly rated by other customers, this broiled shrimp is ready in 17 minutes. We don't know your taste yet, so it's a well-liked place to start." |
+| c_0163 | pass | — | "Highly rated by other customers, this Korean hamburger is ready in 17 minutes. We don't know your taste yet, so it's a well-liked option to try." |
+| c_0164 | pass | — | "Highly rated by other customers, this dorito taco salad with seasoned ground beef, lettuce and cheddar takes 20 minutes. We don't know your taste yet, so it's a popular place to start." |
+
+`c_0153` still fails on "this week" — the model reintroduced that phrase on its own even though the prompt
+no longer prescribes it (rule 1's `POPULAR_FALLBACK` line now reads "highly rated by other customers"; rule
+5's example parenthetical still names "popular with customers this week" as an example of honest framing,
+which may be the source — that occurrence was deliberately left unchanged, out of this pre-registration's
+scope). Judge rationale: *"The copy correctly frames the pick as popular and makes no personal-tailoring or
+health claims, but 'this week' gives a popularity timeframe that appears nowhere in the payload (the reason
+only has a popularity score of 5.0), so it is fabricated."*

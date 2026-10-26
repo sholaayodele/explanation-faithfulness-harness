@@ -182,6 +182,16 @@ intermediate drafts. All numbers are on the 200-case eval set judged with judge 
 | `sensitive_inference` failure count | ≤ 3 |
 | Primary-reason coverage | ≥ 98% |
 
+**Result:** 8/9 criteria met. `fallback` stress case_type not met (16.7%, n=12; threshold ≥70%). **v2 does not
+ship.** See `results/v1_vs_v2.md`.
+
+## v2.1 pre-registration
+
+Decided by Shola **before** any v2.1 run: v2.1 changes only the `POPULAR_FALLBACK` phrasing in rule 1, from
+"popular with customers this week" to "highly rated by other customers". Tested on the 12 `fallback` cases
+only. **Success: fallback pass rate ≥ 70% (at least 9 of 12).** Limitation: other case types are not
+re-run, so regressions there are untested.
+
 ## Repo structure
 ```
 data/raw/          # Kaggle CSV (gitignored)

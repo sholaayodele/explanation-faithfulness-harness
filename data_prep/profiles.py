@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from ingredient_matching import matches_exclusion
+from ingredient_matching import LIKED_INGREDIENT_EXCLUSION_CODE, matches_exclusion
 
 CUISINES = [
     "italian", "mexican", "indian", "chinese", "thai",
@@ -81,6 +81,13 @@ def _make_standard(df: pd.DataFrame, rng: random.Random, forced_diet: str | None
     else:
         liked_ingredients = rng.sample(LIKES, k=rng.choice([1, 2]))
     exclusions = rng.sample(EXCLUSIONS, k=1) if rng.random() < 0.4 else []
+
+    # A profile can't truthfully like an ingredient it has also excluded
+    # (e.g. liked_ingredients=["beef"], exclusions=["no_beef"]) - this was
+    # possible before since the two were sampled independently with no
+    # cross-check, which produced p_031 and the c_0121-c_0124 bug.
+    if any(LIKED_INGREDIENT_EXCLUSION_CODE.get(li) in exclusions for li in liked_ingredients):
+        return None
 
     compatible = df[_compatible_mask(df, diet, exclusions, max_cook_minutes)]
     if len(compatible) < MIN_COMPATIBLE:

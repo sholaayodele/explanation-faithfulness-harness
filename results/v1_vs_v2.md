@@ -135,3 +135,37 @@ which may be the source — that occurrence was deliberately left unchanged, out
 scope). Judge rationale: *"The copy correctly frames the pick as popular and makes no personal-tailoring or
 health claims, but 'this week' gives a popularity timeframe that appears nowhere in the payload (the reason
 only has a popularity score of 5.0), so it is fabricated."*
+
+## Corrected for invalid ground truth
+
+`c_0121`–`c_0124` have a self-contradictory payload (see `data/processed/invalid_cases.txt`): `profile p_031`
+has `liked_ingredients: ["beef"]` and `exclusions: ["no_beef"]` simultaneously, a matcher/validator bug
+(fixed in `ingredient_matching.py`, `matcher/run.py`, `data_prep/profiles.py` — `eval_set.jsonl` itself was
+not regenerated, so these 4 cases remain in it). **The original 200-case numbers and the pre-registered
+verdict above are unchanged and still stand** — this section recomputes the same judge-v2 judgments already
+on disk with those 4 cases excluded, for comparison only.
+
+Re-applying the judge's deterministic rule checks (no LLM calls) with the fixed ingredient matching changed
+**0 verdicts** in either the 200-case v1 or v2 run: the judge's explanation-text check already caught all 4
+cases correctly in both versions (both generators' text explicitly says "beef"), so the bug only ever
+affected the upstream matcher/validator, never the judge's assessment of these 4 cases.
+
+| metric | v1 (200) | v1 (196 valid) | v2 (200) | v2 (196 valid) |
+|---|---|---|---|---|
+| Faithfulness rate | 52.5% [45.6%, 59.3%] | 53.6% [46.6%, 60.4%] | 92.0% [87.4%, 95.0%] | 93.9% [89.6%, 96.5%] |
+| Hallucination rate | 41.0% | 41.8% [35.2%, 48.8%] | 8.0% | 6.1% [3.5%, 10.4%] |
+| Primary-reason coverage | 100.0% | 100.0% | 98.0% | **100.0%** |
+
+All 4 excluded cases failed in both v1 and v2 (the pass count is unchanged; only the denominator shrinks),
+so every rate ticks up slightly. v2's primary-reason coverage reaches exactly 100% once excluded, since all
+4 `primary_reason_stated: false` cases in the original v2 count were c_0121–c_0124 (the refusal texts never
+state a reason at all).
+
+**Corrected failure counts (v2, 196 valid):** `fabrication`: 12 (unchanged — the `POPULAR_FALLBACK` issue is
+unrelated to this bug); `exclusion_violation`: 0 (was 4, all 4 were the invalid cases); `omission`: 0 (was
+4, same); `non_causal_reason`: 0 (was 2, both were c_0121/c_0124). `sensitive_inference` stays 0.
+
+**Pre-registered criteria, recomputed on 196 valid cases:** every criterion's verdict is **unchanged** —
+still 8/9 met, `fallback` still the one miss (2/12 = 16.7%, unaffected since none of the 4 excluded cases
+are `fallback`). Correcting for the invalid ground truth makes the numbers slightly better but changes no
+decision.

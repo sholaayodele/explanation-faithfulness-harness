@@ -103,6 +103,7 @@ Given a structured explanation payload, the model writes a short customer-facing
 ## Data decisions
 Locked decisions for data prep and the matcher (Shola-approved; changes need sign-off, per Rules for Claude Code).
 
+- **All ingredient vocabularies derive from `CATEGORY_TERMS`; no hand-maintained parallel lists.** (`ingredient_matching.EXCLUSION_FORMS` used to be hand-maintained separately and missed the beef-cut synonyms `CATEGORY_TERMS["beef"]` already had — see `data/processed/invalid_cases.txt`.)
 - **Filter:** `main-dish` tag, `minutes` between 10 and 120.
 - **Cuisines:** `italian`, `mexican`, `indian`, `chinese`, `thai`, `greek`, `french`, `middle-eastern`, `cajun`, `caribbean`.
   - A specific cuisine tag wins over the generic `asian` tag; `asian`-only (no specific cuisine tag) gets no cuisine match.

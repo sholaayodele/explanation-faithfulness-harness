@@ -6,16 +6,6 @@ contamination) and schema/validator (excluded_by), so the two can't drift.
 
 import re
 
-# excluded_by code -> forms it covers, any of which disqualify a recipe.
-EXCLUSION_FORMS: dict[str, list[str]] = {
-    "no_pork": ["pork", "bacon", "ham"],
-    "no_beef": ["beef"],
-    "no_shellfish": ["shellfish", "shrimp", "prawn", "crab", "lobster", "clam", "mussel", "oyster", "scallop"],
-    "no_peanut": ["peanut"],
-    "no_mushroom": ["mushroom"],
-    "no_cilantro": ["cilantro"],
-}
-
 # main_ingredient categories, each with its synonyms. Cuts like "pork chop"
 # already contain the literal word "pork", so only true synonyms are added.
 CATEGORY_TERMS: dict[str, list[str]] = {
@@ -36,6 +26,35 @@ OTHER_PROTEIN_TERMS: list[str] = [
     "frank", "hot dog", "pepperoni", "salami", "chorizo", "kielbasa", "bratwurst",
     "meatball", "ground meat", "lunch meat", "deli meat", "spam", "venison", "duck",
 ]
+_SHELLFISH_SPECIES: list[str] = ["crab", "lobster", "clam", "mussel", "oyster", "scallop"]
+
+# excluded_by code -> forms it covers, any of which disqualify a recipe.
+# Derived from CATEGORY_TERMS so an exclusion can never miss a synonym that
+# main_ingredient resolution already recognizes - this is exactly the bug
+# that let a "flank steak" recipe (main_ingredient="beef" via the "steak"
+# synonym) slip past a no_beef exclusion when EXCLUSION_FORMS was a separate,
+# hand-maintained list that only had the literal word "beef". no_shellfish
+# additionally covers the species names in OTHER_PROTEIN_TERMS plus the bare
+# word "shellfish" itself, which is exclusion-only - never a main_ingredient
+# category on its own, so it isn't in CATEGORY_TERMS.
+EXCLUSION_FORMS: dict[str, list[str]] = {
+    "no_pork": CATEGORY_TERMS["pork"],
+    "no_beef": CATEGORY_TERMS["beef"],
+    "no_shellfish": CATEGORY_TERMS["shrimp"] + _SHELLFISH_SPECIES + ["shellfish"],
+    "no_peanut": ["peanut"],
+    "no_mushroom": MUSHROOM_TERMS,
+    "no_cilantro": ["cilantro"],
+}
+
+# A LIKED_INGREDIENT value (or a profile's liked_ingredients entry) contradicts
+# an excluded_by code if the two are the same category - chicken and salmon
+# have no excluded_by code, so they can never contradict one.
+LIKED_INGREDIENT_EXCLUSION_CODE: dict[str, str] = {
+    "beef": "no_beef",
+    "pork": "no_pork",
+    "shrimp": "no_shellfish",
+    "mushroom": "no_mushroom",
+}
 
 # Modifier forms that disqualify an otherwise-matching ingredient:
 # - condiment forms (e.g. "steak sauce") aren't meat themselves.

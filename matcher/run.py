@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from ingredient_matching import matches_exclusion
+from ingredient_matching import LIKED_INGREDIENT_EXCLUSION_CODE, matches_exclusion
 from matcher.reasons import STRONG, WEAK, assign_weights, confidence_for, detect_candidates, rank_top
 from schema.validator import validate_payload
 
@@ -150,9 +150,15 @@ class Matcher:
 
     def _assert_conflict_rule(self, profile: dict, weighted_reasons: list[dict]) -> None:
         diet = profile["diet"]
+        exclusions = profile["exclusions"]
         for r in weighted_reasons:
-            if r["code"] == "LIKED_INGREDIENT" and diet and diet[0] in ("vegetarian", "vegan") and r["value"] != "mushroom":
+            if r["code"] != "LIKED_INGREDIENT":
+                continue
+            if diet and diet[0] in ("vegetarian", "vegan") and r["value"] != "mushroom":
                 raise AssertionError(f"LIKED_INGREDIENT {r['value']!r} contradicts diet {diet}")
+            exclusion_code = LIKED_INGREDIENT_EXCLUSION_CODE.get(r["value"])
+            if exclusion_code and exclusion_code in exclusions:
+                raise AssertionError(f"LIKED_INGREDIENT {r['value']!r} contradicts exclusion {exclusion_code!r}")
 
     # ---------- shared "best match" generator, used by standard / conflicting_signals / sparse_profile ----------
     def _generate_for_profile(self, profile: dict, n: int, case_type: str) -> int:

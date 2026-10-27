@@ -92,6 +92,9 @@ Payload: `CUISINE_MATCH: thai (0.5)`, `TIME_FIT: 25 ≤ 30 min (0.3)`, confidenc
 - **Experiment:** A/B explanation styles against trust signals (profile edits, skip rate, retention), not just clicks.
 - **Contract:** version the payload; any new reason code ships with allowed phrasing and eval cases before it reaches customers.
 - **Fallback policy:** when confidence is low or the judge fails, template copy beats a confident wrong reason.
+- **Payload contract:** add a `cannot_explain` status for self-contradictory payloads (e.g. a liked ingredient that's also excluded), so the generator can refuse safely through a structured field instead of writing refusal text as the "explanation" (seen on c_0121–c_0124, v2).
+- **Prompt cleanup:** `generator/prompts/v2.txt`'s rule 5 example parenthetical still names "popular with customers this week" even after rule 1's phrasing was changed in v2.1 — likely why c_0153 keeps reintroducing it unprompted.
+- **Rubric check:** c_0192 ("a good match for your tastes" at `confidence: high` with no `SIMILAR_TO_RATED`/`LIKED_INGREDIENT` backing) should be checked against ruling 5's tailoring-language conditions.
 
 ---
 

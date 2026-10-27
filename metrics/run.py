@@ -15,6 +15,7 @@ from pathlib import Path
 
 EVAL_SET_PATH = Path("data/processed/eval_set.jsonl")
 OUT_DIR = Path("results")
+INVALID_CASES_PATH = Path("data/processed/invalid_cases.txt")
 
 CASE_TYPES = ["standard", "sparse_profile", "fallback", "low_confidence", "conflicting_signals", "missing_fields"]
 BAIT_TYPES = ["health_tags", "cuisine_not_reason", "contradicted_like", "contradicted_history", "none"]
@@ -50,15 +51,30 @@ def _case_bait(eval_row: dict) -> list[str]:
     return bait if bait else ["none"]
 
 
-def load_cases(gen: str, judge: str) -> list[dict]:
+def load_invalid_case_ids(path: Path = INVALID_CASES_PATH) -> set[str]:
+    """case_ids with a known-invalid ground-truth payload (see the file's own header)."""
+    if not path.exists():
+        return set()
+    ids = set()
+    with path.open() as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            ids.add(line.split(",")[0])
+    return ids
+
+
+def load_cases(gen: str, judge: str, exclude_ids: set[str] | None = None) -> list[dict]:
     """One merged record per case_id: eval payload + generator output + judgment."""
     eval_rows = _load_jsonl(EVAL_SET_PATH)
     outputs = _load_jsonl(OUT_DIR / f"{gen}_outputs.jsonl")
     judgments = _load_jsonl(_judgments_path(gen, judge))
+    exclude_ids = exclude_ids or set()
 
     cases = []
     for case_id, eval_row in eval_rows.items():
-        if case_id not in outputs or case_id not in judgments:
+        if case_id not in outputs or case_id not in judgments or case_id in exclude_ids:
             continue
         cases.append({
             "case_id": case_id,

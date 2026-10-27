@@ -1,0 +1,29 @@
+# Invalid ground-truth cases in eval_set.jsonl
+#
+# These 4 cases have a self-contradictory payload: LIKED_INGREDIENT=beef is
+# the primary reason while excluded_by also contains no_beef, for the same
+# case. Discovered 2026-10-27 while investigating generator v2's refusal
+# behavior on these cases (see results/v1_vs_v2.md, "Root cause" notes).
+#
+# Root cause: profile p_031 (data/processed/profiles.json) was generated with
+# liked_ingredients=["beef"] and exclusions=["no_beef"] simultaneously -
+# data_prep/profiles.py's _make_standard() sampled the two independently with
+# no cross-check between them. This went undetected because
+# ingredient_matching.EXCLUSION_FORMS["no_beef"] only listed the literal word
+# "beef", missing the beef-cut synonyms ("steak", "sirloin", "brisket",
+# "chuck") that CATEGORY_TERMS["beef"] already has for main_ingredient
+# resolution - all 4 recipes are named by cut (flank steak / rump steak /
+# top round steak), so neither the matcher's candidate-pool filter nor
+# schema/validator.py's excluded_by check (both built on EXCLUSION_FORMS)
+# caught it. Fixed: EXCLUSION_FORMS now derives from CATEGORY_TERMS.
+#
+# eval_set.jsonl itself was NOT regenerated - these 4 cases remain in it, in
+# their original (now-known-invalid) form, so no case_id or recipe reuse
+# count shifts. They are excluded from the "valid cases" metrics in
+# results/v1_vs_v2.md's "Corrected for invalid ground truth" section.
+#
+# case_id,profile_id,reason
+c_0121,p_031,"LIKED_INGREDIENT=beef is the primary reason while excluded_by contains no_beef for the same case"
+c_0122,p_031,"LIKED_INGREDIENT=beef is the primary reason while excluded_by contains no_beef for the same case"
+c_0123,p_031,"LIKED_INGREDIENT=beef is the primary reason while excluded_by contains no_beef for the same case"
+c_0124,p_031,"LIKED_INGREDIENT=beef is the primary reason while excluded_by contains no_beef for the same case"

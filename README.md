@@ -139,7 +139,7 @@ v2 is faithful but formulaic. The model copied the phrasing guide verbatim: *"Yo
 
 ## How it was built
 
-Built with **Claude Code**. I owned the spec, rubric, rulings, gold labels and every ship decision; Claude Code wrote the pipeline code. Total API cost: about $8 (itemised in `results/cost_log.md`). Time to v1: about 15 hours (git history, first commit to the v1 generator commit; spans an overnight gap).
+Built with **Claude Code**. I owned the spec, rubric, rulings, gold labels and every ship decision; Claude Code wrote the pipeline code. Total API cost: about $8 (itemised in `results/cost_log.md`). Time to v1: about 6 hours of working time over a weekend.
 
 ---
 
@@ -153,16 +153,34 @@ pip install -r requirements.txt
 cp .env.example .env   # add your ANTHROPIC_API_KEY
 ```
 
-Download `RAW_recipes.csv` and `RAW_interactions.csv` from Kaggle ("Food.com Recipes and Interactions") into `data/raw/`, then:
+**`data/processed/` (`recipes_clean.csv`, `profiles.json`, `eval_set.jsonl`) is committed to this repo and is the exact data behind every result above** — gold labels, judge judgments and metrics are all keyed to its case_ids. There are two different things you might want to do next, and they use different commands.
+
+### Reproduce the results
+
+Starts from the committed `eval_set.jsonl` and regenerates explanations/judgments/metrics from it — this is what actually produced the numbers above:
 
 ```bash
-python -m data_prep.run
-python -m data_prep.profiles
-python -m matcher.run
 python -m generator.run --version v1
 python -m judge.run --version v1 --judge-version v2
 python -m metrics.run --gen v1 --judge v2
 ```
+
+### Rebuild the eval set from scratch
+
+⚠️ **This will NOT reproduce the eval set above, even with the same seed.** Guards against a self-contradictory profile (`liked_ingredients` conflicting with `exclusions` — see `data/processed/invalid_cases.txt`) were added to `data_prep/profiles.py` and `matcher/run.py` *after* `eval_set.jsonl` was frozen, so rerunning them now accepts/rejects a different sequence of random profiles and produces a different eval set. Only do this if you want a fresh eval set, not to reproduce the one above.
+
+Download `RAW_recipes.csv` and `RAW_interactions.csv` from Kaggle ("Food.com Recipes and Interactions") into `data/raw/`, then:
+
+```bash
+python -m data_prep.run --force
+python -m data_prep.profiles --force
+python -m matcher.run --force
+python -m generator.run --version v1
+python -m judge.run --version v1 --judge-version v2
+python -m metrics.run --gen v1 --judge v2
+```
+
+`data_prep.run`, `data_prep.profiles` and `matcher.run` each refuse to overwrite their committed output file unless you pass `--force` — a deliberate guard against accidentally invalidating the results above.
 
 ## Repo structure
 

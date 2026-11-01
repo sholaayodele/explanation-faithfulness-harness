@@ -1,8 +1,16 @@
 """Generate ~50 synthetic customer profiles for the eval set.
 
-Usage: python -m data_prep.profiles
+Usage:
+    python -m data_prep.profiles            # refuses if data/processed/profiles.json already exists
+    python -m data_prep.profiles --force     # overwrites it
+
+The committed profiles.json is the exact data behind eval_set.jsonl and the results in
+README.md. Guards added after the eval set was frozen (see data/processed/invalid_cases.txt)
+mean rerunning this with current code, even with the same seed, gives a DIFFERENT set of
+profiles. See README.md, "Run it yourself".
 """
 
+import argparse
 import json
 import random
 from pathlib import Path
@@ -295,7 +303,15 @@ def _report(profiles: list[dict]) -> None:
     print(f"Compatible-recipe count: min={compatible_counts[0]}, median={median}")
 
 
-def main() -> None:
+def main(force: bool = False) -> None:
+    if OUT_PATH.exists() and not force:
+        raise SystemExit(
+            f"{OUT_PATH} already exists and is the committed data behind eval_set.jsonl and the "
+            "results in README.md - refusing to overwrite it. Pass --force to rebuild from scratch "
+            "anyway (this will NOT reproduce the original profiles - guards added since then change "
+            "which profiles are accepted under the same seed)."
+        )
+
     df = _load_recipes()
     rng = random.Random(SEED)
     profiles = generate_profiles(df, rng)
@@ -310,4 +326,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--force", action="store_true", help=f"overwrite {OUT_PATH} if it already exists")
+    args = parser.parse_args()
+    main(force=args.force)

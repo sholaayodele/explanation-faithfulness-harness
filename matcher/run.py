@@ -1,8 +1,16 @@
 """Build data/processed/eval_set.jsonl from profiles.json + recipes_clean.csv.
 
-Usage: python -m matcher.run
+Usage:
+    python -m matcher.run            # refuses if data/processed/eval_set.jsonl already exists
+    python -m matcher.run --force    # overwrites it
+
+The committed eval_set.jsonl is the exact data behind every result in README.md and
+results/*.md - gold labels, judge judgments and metrics are all keyed to its case_ids.
+Rerunning this, even unchanged, gives a rebuild-from-scratch eval set, not the one behind
+the results. See README.md, "Run it yourself".
 """
 
+import argparse
 import json
 import random
 from collections import Counter
@@ -479,7 +487,13 @@ def _report(cases: list[dict], max_reuse: int) -> None:
     print(f"Total cases: {len(cases)}")
 
 
-def main() -> None:
+def main(force: bool = False) -> None:
+    if OUT_PATH.exists() and not force:
+        raise SystemExit(
+            f"{OUT_PATH} already exists and is the committed data behind every result in README.md - "
+            "refusing to overwrite it. Pass --force to rebuild from scratch anyway."
+        )
+
     cases = build()
 
     errors_found = False
@@ -508,4 +522,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--force", action="store_true", help=f"overwrite {OUT_PATH} if it already exists")
+    args = parser.parse_args()
+    main(force=args.force)

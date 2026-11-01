@@ -1,8 +1,15 @@
 """Build data/processed/recipes_clean.csv from the raw Food.com CSVs.
 
-Usage: python -m data_prep.run
+Usage:
+    python -m data_prep.run            # refuses if data/processed/recipes_clean.csv already exists
+    python -m data_prep.run --force    # overwrites it
+
+The committed recipes_clean.csv is the exact data behind the results in README.md -
+rerunning this, even unchanged, is a rebuild-from-scratch step, not a reproduce-results
+step. See README.md, "Run it yourself".
 """
 
+import argparse
 import ast
 import json
 from pathlib import Path
@@ -118,7 +125,13 @@ def _report(df: pd.DataFrame, n_dropped_veg: int) -> None:
     print(f"is_popular count: {int(df['is_popular'].sum())}")
 
 
-def main() -> None:
+def main(force: bool = False) -> None:
+    if OUT_PATH.exists() and not force:
+        raise SystemExit(
+            f"{OUT_PATH} already exists and is the committed data behind the results in README.md - "
+            "refusing to overwrite it. Pass --force to rebuild from scratch anyway."
+        )
+
     out, n_dropped_veg = build()
     print("Invariant check (no vegetarian/vegan recipe has a meat/fish main_ingredient): PASSED")
 
@@ -138,4 +151,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--force", action="store_true", help=f"overwrite {OUT_PATH} if it already exists")
+    args = parser.parse_args()
+    main(force=args.force)

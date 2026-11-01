@@ -8,13 +8,17 @@
 
 ## Why this matters
 
-Personalization only works if customers trust it. Telling someone *why* a meal was picked makes the menu feel like it knows them. But an explanation that is wrong ("because you love beef" to someone who excluded beef) does more damage than no explanation at all. One false reason undermines every true one.
+When a meal-kit app tells you why it picked a meal, it's making a promise: we know you. Get it right and the menu starts to feel personal. Get it wrong once, say by telling someone who excluded beef that they'll love the beef stir-fry, and every other explanation becomes suspect. A wrong reason is worse than no reason at all.
 
-**Job to be done (team):** When we're about to ship or change LLM-generated "why this meal" copy, I want to know how often it says something untrue, and what kind of untrue, so I can make a confident go/no-go call and scale transparency without eroding customer trust.
+That makes explanation copy trust infrastructure, not just UX text. And with LLMs writing it, the risk changes shape. The model rarely says anything obviously false. It says things that sound right, are often true, and still aren't the reason the meal was picked. You can't catch that by reading a few outputs and nodding.
 
-**Job to be done (customer):** When I'm picking my meals for the week, I want to understand why these were suggested, so I can trust the menu, decide faster, and correct it when it's wrong.
+I built this to answer the question a PM has to answer before shipping LLM explanations: how often does this copy say something untrue, what kind of untrue, and did my change actually fix it?
 
-**What this replaces:** manual spot-checks (in this project, careful human review missed rule violations in 12 of 50 cases), template-only copy (safe but generic), and shipping then waiting for complaints.
+The job, from the team's side: before we ship or change explanation copy, know the failure rate and the failure types well enough to make a confident go/no-go call.
+
+The job, from the customer's side: understand why these meals were suggested, so I can trust the menu, decide faster, and fix my profile when it's wrong.
+
+What it replaces: spot-checking a handful of outputs by eye. I tested that too. Reviewing 50 cases carefully, I missed rule violations in 12 that the judge caught. The other options are template-only copy, which is safe but generic, or shipping and waiting for complaints, which is the most expensive way to find out.
 
 ---
 

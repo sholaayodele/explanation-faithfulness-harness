@@ -104,9 +104,20 @@ v2.1 changed only that phrase to "highly rated by other customers," tested on th
 
 ### Three failures worth seeing
 
-1. **A true fact presented as a reason (v1, c_0195).** Reason: `LIKED_INGREDIENT = mushroom`. Copy: *"…because you love mushrooms… It fits comfortably within your 60-minute cooking window."* The time limit is true, but it wasn't why the meal was picked. This was the model's most common failure. v2 fix: never mention the time limit unless `TIME_FIT` is a reason, with an example showing cook time stated only as a meal fact.
-2. **A health tag as a selling point (v1, c_0165, low confidence).** Reason: `TIME_FIT` only. Copy: *"…It's a light, low-calorie option built on pork, fennel, and tomatoes."* The customer never stated a health goal. v2 fix: an explicit ban on health language.
-3. **The model refused, and was right to (v2, c_0121–c_0124).** These payloads made "you love beef" the primary reason for a customer who had excluded beef. v2 refused to write customer copy; v1 wrote "you love beef" four times. The cause was a synonym gap: "steak" counted as beef for liking it, but not for excluding it. The same class of bug (two word lists drifting apart) had appeared once before during data prep; every ingredient vocabulary now derives from a single source, with tests.
+I picked these three because each one points to a different owner: the model, the spec, and the data.
+
+1. The true fact that wasn't the reason (c_0195, v1)
+The only reason for this pick was `LIKED_INGREDIENT = mushroom`. The copy said: "We picked this hearty vegan Greek-style stew because you love mushrooms… It fits comfortably within your 60-minute cooking window."
+Nothing in that sentence is false. The customer does have a 60-minute limit. But time had nothing to do with why this meal was chosen, and the copy presents it as if it did. This was v1's most common failure by a wide margin (60 of 200 cases), and the hardest kind to spot by eye, because every individual claim checks out. The model had the customer's profile in front of it and couldn't resist using it.
+This is why I added `non_causal_reason` to the taxonomy after the first read. "Is it true?" turned out to be the wrong question. The right one is "is it why?"
+
+2. The failure that was mine (fallback cases, v2)
+v2 fixed almost everything except cold-start customers: 2 of 12 passed, no better than v1. I wrote v2's instructions, including the suggested copy for popularity picks: "popular with customers this week." The payload carries an average rating. It says nothing about this week. The model followed my spec exactly, and my spec made a claim the data couldn't back.
+Changing one phrase to "highly rated by other customers" took it to 11 of 12. The twelfth failed because the old phrase still appeared once elsewhere in the prompt. The lesson I'd take into a real team: approved copy needs to be checked against the data contract, the same as the model's output.
+
+3. The model was right and the data was wrong (c_0121–c_0124, v2)
+Four cases made "you love beef" the primary reason for a customer who had excluded beef. v1 wrote cheerful beef copy for all four. v2 refused to write anything, and the judge marked that as a failure, because the judge trusts the payload.
+The root cause was upstream. "Steak" counted as beef when matching what the customer liked, but not when matching what they'd excluded. Two word lists had drifted apart, and I'd hit the same class of bug once before during data prep. I excluded the four cases, kept the original numbers alongside the corrected ones, and moved every ingredient list to a single source with tests. No conclusion changed.
 
 ### Copy quality (not measured, but noticed)
 
@@ -116,13 +127,34 @@ v2 is faithful but formulaic. The model copied the phrasing guide verbatim: *"Yo
 
 ## What I'd do next as PM
 
-- **Ship decision:** ship v2.1 behind a flag, after re-running the full eval under v2.1 to confirm no regressions outside fallback.
-- **Fix the contract, not just the prompt:** stop sending profile_context to the generator at all. Most v1 failures came from it, and a structural fix beats a prompt rule.
-- **Add a `cannot_explain` status to the payload** so the generator can refuse safely; refusal text must never reach a customer.
-- **Copy quality:** give allowed *meanings* per reason code with varied examples, and add a tone or variety check alongside faithfulness.
-- **Production monitoring:** judge a daily sample, alert when the hallucination rate crosses a threshold, and track it by case type (fallback and low confidence first).
-- **Experiment:** A/B test explanation styles against trust signals (profile edits, skips, retention), not just clicks.
-- **Labelling:** add a second annotator for inter-annotator agreement.
+v2.1 is close, but I wouldn't ship it on what's here. Here's the order I'd work in.
+
+1. Close the gaps before any customer sees it.
+
+* Re-run all 200 cases on v2.1. I only tested the fallback cases, so regressions elsewhere are unproven.
+* Ship behind a flag to a small slice of traffic, with the judge scoring a daily sample. Alert on hallucination rate by case type, starting with fallback and low confidence, where it broke before.
+
+2. Fix the contract, not just the prompt.
+
+* Stop sending the customer profile to the generator. Most v1 failures came from it. A prompt rule asking the model to ignore data it can see is a weak control; not sending the data is a strong one.
+* Add a `cannot_explain` status. v2 refused correctly on bad data, but refusal text must never reach a customer. The model needs a structured way to say "don't show this," routed back to ranking.
+* Give each reason code approved meanings, owned in the contract. Then copy changes get reviewed against the data, which is how the fallback bug would have been caught.
+
+3. Measure whether explanations earn trust, not just whether they're true.
+
+* Faithfulness is a guardrail metric, not the goal. I'd A/B test no explanation vs v2.1 and look at trust signals: profile edits, meal swaps, skip rate and retention.
+* The biggest finding here is that explanations got least honest where profile data was thinnest. So better profile collection pays off twice: better recommendations, and honest reasons to show for them. That's the case I'd make for prioritizing profile quality.
+
+4. Fix the copy before scaling it.
+v2 is faithful but formulaic ("You love mushroom… mushrooms, which you like"). I'd give the model meanings rather than template phrases, and add a tone and variety check next to faithfulness. A correct explanation that reads like a database won't make anyone feel known.
+
+5. Make the eval part of how the team works.
+
+* Run it in CI on every prompt or contract change, so faithfulness can't silently regress.
+* Add a second annotator. With one, the honest ceiling on the judge is unknown.
+* Grow the hold-out beyond 20 cases, and stop tuning the judge on cases it has already seen.
+
+What I wouldn't do yet: fine-tune. The failures were about what the model was given and told, not what it was capable of. Fixing the contract is cheaper and easier to reason about.
 
 ---
 

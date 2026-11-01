@@ -139,7 +139,7 @@ v2 is faithful but formulaic. The model copied the phrasing guide verbatim: *"Yo
 
 ## How it was built
 
-Built with **Claude Code**. I owned the spec, rubric, rulings, gold labels and every ship decision; Claude Code wrote the pipeline code. Total API cost: about $8 (itemised in `results/cost_log.md`). Time to v1: about 6 hours of working time over a weekend.
+Built with **Claude Code**. I owned the spec, rubric, rulings, gold labels and every ship decision; Claude Code wrote the pipeline code. Total API cost: about $8 (itemised in `results/cost_log.md`). Time to v1: about 8 hours of working time over a weekend.
 
 ---
 
